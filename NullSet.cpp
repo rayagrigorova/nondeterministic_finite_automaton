@@ -19,3 +19,7 @@ NDFA NullSet::buildAutomatonForLanguage() const{
 
 	return NDFA(std::move(final), std::move(initial), std::move(all));
 }
+
+RegEx* NullSet::clone() const {
+	return new NullSet(*this); 
+}

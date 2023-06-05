@@ -12,10 +12,19 @@ void State::removeAllTransitionsTo(int state) {
 	}
 }
 
+size_t State::getNumberOfTransitions() const
+{
+	return size_t();
+}
+
 const Pair<char, int>& State::operator[](size_t ind) const {
 	return _arr[ind];
 }
 
 Pair<char, int>& State::operator[](size_t ind) {
 	return _arr[ind];
+}
+
+size_t State::getNumberOfTransitions() const {
+	return _arr.getSize(); 
 }

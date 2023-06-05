@@ -20,3 +20,7 @@ NDFA Epsilon::buildAutomatonForLanguage() const {
 
 	return NDFA(std::move(final), std::move(initial), std::move(all));
 }
+
+RegEx* Epsilon::clone() const {
+	return new Epsilon(*this); 
+}

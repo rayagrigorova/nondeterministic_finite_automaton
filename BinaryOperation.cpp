@@ -14,3 +14,12 @@ NDFA BinaryOperation::buildAutomatonForLanguage() const {
 		return concatenation(_lhs->buildAutomatonForLanguage(), _rhs->buildAutomatonForLanguage());
 	}
 }
+
+RegEx* BinaryOperation::clone() const {
+	return new BinaryOperation(*this); 
+}
+
+BinaryOperation::~BinaryOperation() {
+	delete _lhs;
+	delete _rhs; 
+}
