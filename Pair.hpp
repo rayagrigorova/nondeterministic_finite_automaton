@@ -6,6 +6,7 @@ class Pair {
 	S _second;
 
 public:
+	Pair() = default;
 	Pair(const T& first, const S& second);
 
 	void setFirst(const T& first);

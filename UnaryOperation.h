@@ -12,5 +12,5 @@ public:
 
 	RegEx* clone() const override;
 
-	~BinaryOperation();
+	~UnaryOperation();
 };

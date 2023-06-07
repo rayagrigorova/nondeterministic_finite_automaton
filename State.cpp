@@ -12,11 +12,6 @@ void State::removeAllTransitionsTo(int state) {
 	}
 }
 
-size_t State::getNumberOfTransitions() const
-{
-	return size_t();
-}
-
 const Pair<char, int>& State::operator[](size_t ind) const {
 	return _arr[ind];
 }
@@ -27,4 +22,10 @@ Pair<char, int>& State::operator[](size_t ind) {
 
 size_t State::getNumberOfTransitions() const {
 	return _arr.getSize(); 
+}
+
+void State::print() const {
+	for (int i = 0; i < _arr.getSize(); i++) {
+		std::cout << "Letter: " << _arr[i].getFirst() << " Destination state: " << _arr[i].getSecond() << std::endl; 
+	}
 }

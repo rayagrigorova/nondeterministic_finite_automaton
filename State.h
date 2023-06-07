@@ -19,4 +19,9 @@ public:
 	
 	const Pair<char, int>& operator[](size_t ind) const; // constant 
 	Pair<char, int>& operator[](size_t ind); // non-constant 
+
+	void print() const; 
+
+	// I want to be able to delete and add transitions 
+	friend class NDFA;
 };

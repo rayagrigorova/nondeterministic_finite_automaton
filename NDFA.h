@@ -19,7 +19,7 @@ class NDFA {
 
 	bool accept(const StringView& word, int currentState) const; 
 
-	bool NDFA::isReachable(size_t stateInd);
+	bool isReachable(size_t stateInd);
 	bool isReachable(size_t fromInd, size_t destInd); // check if a state is reachable through some initial state
 
 public:
@@ -37,16 +37,19 @@ public:
 	bool isEmptyLanguage() const;
 	
 	friend NDFA Union(const NDFA& a1, const NDFA& a2);
-	friend NDFA concatenation(const NDFA& a1, const NDFA& a2);
-	friend NDFA kleeneStar(const NDFA& a);
-
 	friend NDFA Union(NDFA&& a1, NDFA&& a2);
+
+	friend NDFA concatenation(const NDFA& a1, const NDFA& a2);
 	friend NDFA concatenation(NDFA&& a1, NDFA&& a2);
+
+	friend NDFA kleeneStar(const NDFA& a);
 	friend NDFA kleeneStar(NDFA&& a);
 
 	MyString getRegEx() const; 
 
 	friend NDFA getAutomatonForRegEx(MyString regEx); 
+
+	void print() const; 
 };
 
 NDFA Union(const NDFA& a1, const NDFA& a2);

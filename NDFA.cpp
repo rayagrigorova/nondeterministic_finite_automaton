@@ -81,13 +81,14 @@ bool NDFA::accept(const StringView& word, int currentState) const{
 }
 
 bool NDFA::isEmptyLanguage() const {
-
+	return true;
 }
 
 MyString NDFA::getRegEx() const {
-
+	return "";
 }
 
+// The result of creating an union automaton is like "putting the automata next to each other"
 NDFA Union(const NDFA& a1, const NDFA& a2) {
 	NDFA res(a1);
 
@@ -115,11 +116,13 @@ NDFA Union(const NDFA& a1, const NDFA& a2) {
 	return res;
 }
 
+// The result of creating an union automaton is like "putting the automata next to each other"
 NDFA Union(NDFA&& a1, NDFA&& a2) {
+	size_t size1 = a1._allStates.getSize();
+
 	NDFA res(std::move(a1));
 
 	// Get the maximal index for a state in the second automaton 
-	size_t size1 = a1._allStates.getSize();
 	size_t size2 = a2._allStates.getSize();
 
 	// Copy states 
@@ -143,19 +146,98 @@ NDFA Union(NDFA&& a1, NDFA&& a2) {
 }
 
 NDFA concatenation(NDFA&& a1, NDFA&& a2) {
+	size_t indexingStart = a1._allStates.getSize(); 
 
-}
+	if (!a1.accept(&EPSILON)) {
+		// The final states of the concatenation automaton are only the final states of the second automaton 
+		a1._finalStates.clear(); 
+	}
 
-NDFA kleeneStar(NDFA&& a) {
+	// "Put the automata next to each other"
+	NDFA res(Union(a1, a2));
 
+	// Add all outgoing transitions from start states of the second automatons to the end states of the first automaton 
+
+	// All initial states of the second automaton 
+	for (int i = 0; i < a2._initialStates.getSize(); i++) {
+		// All outgoing transitions of the current state 
+		for (int j = 0; j < a2._allStates[i].getNumberOfTransitions(); i++) {
+			// All final states of the first automaton 
+			for (int k = 0; k < res._finalStates.getSize(); k++) {
+				res._allStates[k].addTransition(a2._allStates[i][j].getFirst(), a2._allStates[i][j].getSecond() + indexingStart);
+			}
+		}
+	}
 }
 
 NDFA concatenation(const NDFA& a1, const NDFA& a2) {
+	size_t indexingStart = a1._allStates.getSize();
 
+	NDFA a1Copy(a1); 
+
+	if (!a1.accept(&EPSILON)) {
+		// The final states of the concatenation automaton are only the final states of the second automaton 
+		a1Copy._finalStates.clear();
+	}
+
+	// "Put the automata next to each other"
+	NDFA res(Union(a1, a2));
+
+	// Add all outgoing transitions from start states of the second automatons to the end states of the first automaton 
+
+	// All initial states of the second automaton 
+	for (int i = 0; i < a2._initialStates.getSize(); i++) {
+		// All outgoing transitions of the current state 
+		for (int j = 0; j < a2._allStates[i].getNumberOfTransitions(); i++) {
+			// All final states of the first automaton 
+			for (int k = 0; k < res._finalStates.getSize(); k++) {
+				res._allStates[k].addTransition(a2._allStates[i][j].getFirst(), a2._allStates[i][j].getSecond() + indexingStart);
+			}
+		}
+	}
+}
+
+NDFA kleeneStar(NDFA&& a) {
+	// Add a new state
+	a._allStates.pushBack(State());
+	size_t indexInArr = a._allStates.getSize() - 1;
+
+	// Copy all outgoing transitions of initial states from the old automaton 
+	for (int i = 0; i < a._initialStates.getSize(); i++) {
+		for (int j = 0; j < a._allStates[i].getNumberOfTransitions(); i++) {
+			a._allStates[indexInArr].addTransition (a._allStates[i][j].getFirst(), a._allStates[i][j].getSecond());
+		}
+	}
+
+	// Remove all other initial states as initial states 
+	a._initialStates.clear(); 
+	// Add the new state as a final and initial state 
+	a._initialStates.pushBack(a._allStates.getSize() - 1); 
+	a._finalStates.pushBack(a._allStates.getSize() - 1);
+	 
+	return a; 
 }
 
 NDFA kleeneStar(const NDFA& a) {
+	// Add a new state
+	NDFA copyA(a);
+	copyA._allStates.pushBack(State());
+	size_t indexInArr = copyA._allStates.getSize() - 1;
 
+	// Copy all outgoing transitions of initial states from the old automaton 
+	for (int i = 0; i < copyA._initialStates.getSize(); i++) {
+		for (int j = 0; j < copyA._allStates[i].getNumberOfTransitions(); i++) {
+			copyA._allStates[indexInArr].addTransition(copyA._allStates[i][j].getFirst(), copyA._allStates[i][j].getSecond());
+		}
+	}
+
+	// Remove all other initial states as initial states 
+	copyA._initialStates.clear();
+	// Add the new state as copyA final and initial state 
+	copyA._initialStates.pushBack(copyA._allStates.getSize() - 1);
+	copyA._finalStates.pushBack(copyA._allStates.getSize() - 1);
+
+	return copyA;
 }
 
 NDFA getAutomatonForRegEx(MyString regEx){
@@ -212,10 +294,30 @@ bool NDFA::isReachable(size_t fromInd, size_t destInd) {
 			break; 
 		}
 	}
+	bool isReachable = (reachable[destInd] == 1);
 
 	delete[] reachable;
 
-	return reachable[destInd] == 1;
+	return isReachable;
+}
+
+void NDFA::print() const {
+	std::cout << "Indices of initial states:" << std::endl;
+	for (int i = 0; i < _initialStates.getSize(); i++) {
+		std::cout << _initialStates[i] << " "; 
+	}
+	std::cout << std::endl << std::endl; 
+
+	std::cout << "Indices of final states:" << std::endl;
+	for (int i = 0; i < _finalStates.getSize(); i++) {
+		std::cout << _finalStates[i] << " ";
+	}
+	std::cout << std::endl << std::endl;
+
+	for (int i = 0; i < _allStates.getSize(); i++) {
+		_allStates[i].print();
+	}
+	std::cout << std::endl << std::endl;
 }
 
 

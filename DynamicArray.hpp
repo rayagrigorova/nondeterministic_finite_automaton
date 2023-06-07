@@ -40,6 +40,7 @@ public:
 	T& operator[](size_t index);
 
 	void erase(size_t pos);
+	void clear(); // erase all elements from the vector and leave it with a size of 0 
 };
 
 template <typename T>
@@ -232,4 +233,9 @@ void DynamicArray<T>::erase(size_t pos) {
 		arr[i] = arr[i + 1];
 	}
 	size--;
+}
+
+template <typename T>
+void DynamicArray<T>::clear() {
+	size = 0;
 }
