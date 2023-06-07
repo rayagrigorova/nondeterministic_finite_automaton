@@ -13,7 +13,8 @@ NDFA::NDFA(const DynamicArray<size_t>& finalStates, const DynamicArray<size_t>& 
 }
 
 NDFA::NDFA(const MyString& str) {
-	// parse the string 
+	RegExCalculator calc(str);
+	*this = calc.buildAutomaton(); 
 }
 
 void NDFA::determinize() {
@@ -168,6 +169,7 @@ NDFA concatenation(NDFA&& a1, NDFA&& a2) {
 			}
 		}
 	}
+	return res;
 }
 
 NDFA concatenation(const NDFA& a1, const NDFA& a2) {
@@ -195,6 +197,7 @@ NDFA concatenation(const NDFA& a1, const NDFA& a2) {
 			}
 		}
 	}
+	return res;
 }
 
 NDFA kleeneStar(NDFA&& a) {

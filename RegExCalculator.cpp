@@ -63,8 +63,10 @@ NDFA RegExCalculator::buildAutomaton() {
 	return _expr->buildAutomatonForLanguage(); 
 }
 
+
+
 RegEx* RegExCalculator::parseExpr(const StringView& str) {
-	if (str.length() == 0) {
+	if (str.length() == 1) {
 		switch (str[0]) {
 		case NULL_SET:
 			return new NullSet(); 
@@ -76,20 +78,25 @@ RegEx* RegExCalculator::parseExpr(const StringView& str) {
 	}
 
 	int count = 0;
+
+	std::cout << str << std::endl;
 	for (int i = 0; i < str.length(); i++) {
 		if (str[i] == '(') {
 			count++;
 		}
-		else if (str[i] == '(') {
+		else if (str[i] == ')') {
 			count--;
 		}
 
 		else if (count == 0 && isOperation(str[i])) {
+			std::cout << "OP: " << str[i] << std::endl;
 			if (str[i] == KLEENE_STAR) {
-				return new UnaryOperation(parseExpr(str.substr(0, i - 1)), KLEENE_STAR); 
+				std::cout << "Substr: " << str.substr(0, 1);
+				return new UnaryOperation(parseExpr(str.substr(1, i - 1)), KLEENE_STAR); 
 			}
 			else {
-				return new BinaryOperation(parseExpr(str.substr(0, i - 1)), parseExpr(str.substr(i + 1, str.length() - i - 1)), str[i]); 
+				std::cout << "Substrings: " << str.substr(0, i) << "|" << str.substr(i + 1, str.length() - i - 1) << std::endl;
+				return new BinaryOperation(parseExpr(str.substr(0, i)), parseExpr(str.substr(i + 1, str.length() - i - 1)), str[i]); 
 			}
 		}
 	}

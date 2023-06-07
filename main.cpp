@@ -3,9 +3,12 @@
 #include "NDFA.h"
 
 int main() {
-    NDFA a("a.(b.a+b)*");
+    NDFA a("(a.(b.a+b)*)");
 
-    std::cout << a.accept("aba");
-    std::cout << a.accept("baa");
+
+    //std::cout << a.accept("aba");
+    //std::cout << a.accept("baa");
+
+    a.print(); 
 }
 
