@@ -1,5 +1,6 @@
 #include "NDFA.h"
 #include "RegExCalculator.h"
+#include "SymbolConstants.h"
 
 NDFA::NDFA(DynamicArray<size_t>&& finalStates, DynamicArray<size_t>&& initialStates, DynamicArray<State>&& allStates)
 	: _finalStates(std::move(finalStates)), _initialStates(std::move(initialStates)), _allStates(std::move(allStates)){
@@ -28,13 +29,29 @@ void NDFA::makeTotal() {
 }
 
 bool NDFA::accept(const StringView& word) const{
+	// There are no transitions involved when recognizing epsilon 
+	// The condition under which a language contains epsilon is that for some state qi: 
+	// qi is both initial and final 
+	if (word.length() == 1 && word[0] == EPSILON) {
+		for (int i = 0; i < _initialStates.getSize(); i++) {
+			for (int j = 0; j < _finalStates.getSize(); j++) {
+				if (_initialStates[i] == _finalStates[j]) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
 	for (int i = 0; i < _initialStates.getSize(); i++) {
 		// Use a private function accept to check if one of the initial states 
-		// accepts the word 
+		// accepts the word - at least one initial state's right language should contain the word. 
 		if (accept(word, _initialStates[i])) {
 			return true;
 		}
 	}
+
+	// No initial state's right language contains the word 
 	return false;
 }
 
@@ -161,6 +178,8 @@ bool NDFA::isReachable(size_t fromInd, size_t destInd) {
 	// qj is reachable from qi i n steps 
 
 	// Make a list of all states reachable from the fromState 
+	// Using a bool array isn't optimal in terms of memory because a bool only uses 1 bit out of 8 
+	// However, for the sake of simplicity, I am going to use a bool array 
 	size_t reachableCount = 0;
 	bool* reachable = new bool[_allStates.getSize()];
 
@@ -169,14 +188,31 @@ bool NDFA::isReachable(size_t fromInd, size_t destInd) {
 
 	// This loop will repeat n times 
 	while(1){
+		// This flag is used to indicate whether a new state was added to the reachable list 
+		bool flag = 0; 
+
 		// Go through all states in the reachable array 
 		for (int i = 0; i < reachableCount; i++) {
+
 			// For each states in the reachable array, add the destination states from all one step transitions 
+			// to the array of reachable states. A destination state is qj in (qi, x) = qj 
 			for (int j = 0; j < _allStates[i].getNumberOfTransitions(); i++) {
-				reachable[_allStates[i][j].getSecond()] = 1;
+
+				// If we are about to add a state that wasn't in the array initially 
+				// This check is necessary because of the flag 
+				if (reachable[_allStates[i][j].getSecond()] == 0) {
+					flag = 1;
+					reachable[_allStates[i][j].getSecond()] = 1;
+				}
 			}
 		}
+
+		// If no new states were added in the reachable array 
+		if (!flag) {
+			break; 
+		}
 	}
+
 	delete[] reachable;
 
 	return reachable[destInd] == 1;
