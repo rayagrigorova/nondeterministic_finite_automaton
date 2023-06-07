@@ -29,6 +29,8 @@ void NDFA::makeTotal() {
 
 bool NDFA::accept(const StringView& word) const{
 	for (int i = 0; i < _initialStates.getSize(); i++) {
+		// Use a private function accept to check if one of the initial states 
+		// accepts the word 
 		if (accept(word, _initialStates[i])) {
 			return true;
 		}
@@ -37,20 +39,27 @@ bool NDFA::accept(const StringView& word) const{
 }
 
 bool NDFA::accept(const StringView& word, int currentState) const{
+	// Base of the recursion 
 	if (word.length() == 0) {
 		return true;
 	}
-	for (int i = 0; i < _allStates.getSize(); i++) {
-		if (i == currentState) {
-			continue;
-		}
-		
-		for (int j = 0; j < _allStates[i].getNumberOfTransitions(); i++) {
+
+	// Go through all states 
+	for (int i = 0; i < _allStates.getSize(); i++) {	
+
+		// Go through all transitions of the current state 
+		for (int j = 0; j < _allStates[i].getNumberOfTransitions(); j++) {
+			// If there is a transition from state qi to qj with the first letter of the word, proceed to the
+			// next state and remove the first letter of the word. 
 			if (_allStates[i][j].getFirst() == word[0]) {
-				return accept(word.substr(1, word.length() - 1), _allStates[i][j].getSecond());
+				// Recursive call 
+				accept(word.substr(1, word.length() - 1), _allStates[i][j].getSecond());
 			}
 		}
 	}
+
+	// If we go through all possible qi and possible destination states qj without finding a transition (qi, x, qj) for 
+	// some i,j and x = word[0], then the subtree can't possibly contain a valid path with a label w
 	return false;
 }
 
@@ -135,6 +144,42 @@ NDFA kleeneStar(const NDFA& a) {
 NDFA getAutomatonForRegEx(MyString regEx){
 	RegExCalculator calc(regEx);
 	return calc.buildAutomaton(); 
+}
+
+// This function will only be used to call the overload isReachable(fromInd, stateInd) for all start states 
+bool NDFA::isReachable(size_t stateInd) {
+	for (int i = 0; i < _initialStates.getSize(); i++) {
+		if (isReachable(i, stateInd)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+bool NDFA::isReachable(size_t fromInd, size_t destInd) {
+	// A state qj is reachable from a state qi if there exists a natural number n: 
+	// qj is reachable from qi i n steps 
+
+	// Make a list of all states reachable from the fromState 
+	size_t reachableCount = 0;
+	bool* reachable = new bool[_allStates.getSize()];
+
+	// The fromState is reachable from itself in 0 steps 
+	reachable[fromInd] = 1; 
+
+	// This loop will repeat n times 
+	while(1){
+		// Go through all states in the reachable array 
+		for (int i = 0; i < reachableCount; i++) {
+			// For each states in the reachable array, add the destination states from all one step transitions 
+			for (int j = 0; j < _allStates[i].getNumberOfTransitions(); i++) {
+				reachable[_allStates[i][j].getSecond()] = 1;
+			}
+		}
+	}
+	delete[] reachable;
+
+	return reachable[destInd] == 1;
 }
 
 

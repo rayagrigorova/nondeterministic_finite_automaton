@@ -19,6 +19,9 @@ class NDFA {
 
 	bool accept(const StringView& word, int currentState) const; 
 
+	bool NDFA::isReachable(size_t stateInd);
+	bool isReachable(size_t fromInd, size_t destInd); // check if a state is reachable through some initial state
+
 public:
 	NDFA(DynamicArray<size_t>&& finalStates, DynamicArray<size_t>&& initialStates, DynamicArray<State>&& allStates); 
 	NDFA(const DynamicArray<size_t>& finalStates, const DynamicArray<size_t>& initialStates, const DynamicArray<State>& allStates);
