@@ -16,4 +16,6 @@ public:
 	RegEx* clone() const override;
 
 	~BinaryOperation(); 
+
+	virtual void print() const override;
 };

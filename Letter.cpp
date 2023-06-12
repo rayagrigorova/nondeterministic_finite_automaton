@@ -10,6 +10,7 @@ NDFA Letter::buildAutomatonForLanguage() const {
 	// a transition with the given letter to a final state. 
 	DynamicArray<size_t> initial, final;
 	DynamicArray<State> all; 
+
 	State s1, s2;
 
 	// add a transition to s2 
@@ -21,7 +22,12 @@ NDFA Letter::buildAutomatonForLanguage() const {
 	all.pushBack(std::move(s1));
 	all.pushBack(std::move(s2));
 
-	return NDFA(std::move(final), std::move(initial), std::move(all));
+	NDFA res(std::move(final), std::move(initial), std::move(all));
+
+	std::cout << "LETTER AUTOMATON: \n";
+	res.print(); 
+
+	return res; 
 }
 
 RegEx* Letter::clone() const {

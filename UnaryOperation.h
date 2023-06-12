@@ -13,4 +13,6 @@ public:
 	RegEx* clone() const override;
 
 	~UnaryOperation();
+
+	virtual void print() const override; 
 };

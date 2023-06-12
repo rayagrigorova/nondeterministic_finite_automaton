@@ -12,9 +12,19 @@ NDFA::NDFA(const DynamicArray<size_t>& finalStates, const DynamicArray<size_t>& 
 
 }
 
-NDFA::NDFA(const MyString& str) {
+NDFA::NDFA(const MyString& str){
 	RegExCalculator calc(str);
-	*this = calc.buildAutomaton(); 
+
+	//std::cout << "REG EX BUILD:\n\n";
+	//calc.getRegEx()->print();
+	
+	NDFA res = calc.buildAutomaton(); 
+
+	//_initialStates = res._initialStates;
+	//_finalStates = res._finalStates;
+	//_allStates = res._allStates;
+
+	// *this = calc.buildAutomaton()
 }
 
 void NDFA::determinize() {
@@ -90,7 +100,8 @@ MyString NDFA::getRegEx() const {
 }
 
 // The result of creating an union automaton is like "putting the automata next to each other"
-NDFA Union(const NDFA& a1, const NDFA& a2) {
+NDFA Union(const NDFA& a1, const NDFA& a2) {	
+	return NDFA();
 	NDFA res(a1);
 
 	// Get the maximal index for a state in the second automaton 
@@ -128,7 +139,7 @@ NDFA Union(NDFA&& a1, NDFA&& a2) {
 
 	// Copy states 
 	for (int i = 0; i < size2; i++) {
-		res._allStates.pushBack(std::move(a2._allStates[i]));
+		res._allStates.pushBack(a2._allStates[i]);
 	}
 
 	// Copy initial 
@@ -143,6 +154,9 @@ NDFA Union(NDFA&& a1, NDFA&& a2) {
 		res._finalStates.pushBack(a2._finalStates[i] + size1);
 	}
 
+	std::cout << "UNION AUTOMATON\n\n\n"; 
+	res.print(); 
+
 	return res;
 }
 
@@ -155,20 +169,30 @@ NDFA concatenation(NDFA&& a1, NDFA&& a2) {
 	}
 
 	// "Put the automata next to each other"
-	NDFA res(Union(a1, a2));
+	NDFA res(Union(std::move(a1), std::move(a2)));
 
 	// Add all outgoing transitions from start states of the second automatons to the end states of the first automaton 
 
 	// All initial states of the second automaton 
 	for (int i = 0; i < a2._initialStates.getSize(); i++) {
+		// The index of the current initial state in the array of states 
+		int initialStateInd = a2._initialStates[i]; 
+
 		// All outgoing transitions of the current state 
-		for (int j = 0; j < a2._allStates[i].getNumberOfTransitions(); i++) {
+		for (int j = 0; j < a2._allStates[i].getNumberOfTransitions(); j++) {
+
 			// All final states of the first automaton 
 			for (int k = 0; k < res._finalStates.getSize(); k++) {
-				res._allStates[k].addTransition(a2._allStates[i][j].getFirst(), a2._allStates[i][j].getSecond() + indexingStart);
+
+				// The index of the current final state in the array of states 
+				int finalInd = res._finalStates[k];
+				
+				res._allStates[finalInd].addTransition(a2._allStates[initialStateInd][j].getFirst(), a2._allStates[initialStateInd][j].getSecond() + indexingStart);
 			}
 		}
 	}
+	std::cout << "CONCATENATION AUTOMATON:\n\n";
+	res.print(); 
 	return res;
 }
 
@@ -305,6 +329,12 @@ bool NDFA::isReachable(size_t fromInd, size_t destInd) {
 }
 
 void NDFA::print() const {
+	std::cout << "Indices of all states:" << std::endl;
+	for (int i = 0; i < _allStates.getSize(); i++) {
+		std::cout << i << " "; 
+	}
+	std::cout << std::endl; 
+
 	std::cout << "Indices of initial states:" << std::endl;
 	for (int i = 0; i < _initialStates.getSize(); i++) {
 		std::cout << _initialStates[i] << " "; 
@@ -317,7 +347,10 @@ void NDFA::print() const {
 	}
 	std::cout << std::endl << std::endl;
 
+	std::cout << "Transitions:\n";
+
 	for (int i = 0; i < _allStates.getSize(); i++) {
+		std::cout << "Start state: " << i << " "; 
 		_allStates[i].print();
 	}
 	std::cout << std::endl << std::endl;

@@ -26,4 +26,6 @@ public:
 
 	RegExCalculator(const MyString& str);
 	NDFA buildAutomaton();
+
+	const RegEx* getRegEx() const;
 };

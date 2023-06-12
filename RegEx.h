@@ -8,4 +8,6 @@ public:
 	virtual NDFA buildAutomatonForLanguage() const = 0;
 	virtual ~RegEx() = default; 
 	virtual RegEx* clone() const = 0;
+
+	virtual void print() const = 0;
 };

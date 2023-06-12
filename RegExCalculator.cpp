@@ -63,6 +63,10 @@ NDFA RegExCalculator::buildAutomaton() {
 	return _expr->buildAutomatonForLanguage(); 
 }
 
+const RegEx* RegExCalculator::getRegEx() const {
+	return _expr;
+}
+
 
 
 RegEx* RegExCalculator::parseExpr(const StringView& str) {
@@ -77,26 +81,31 @@ RegEx* RegExCalculator::parseExpr(const StringView& str) {
 		}
 	}
 
+	StringView withoutBrackets = str.substr(1, str.length() - 2);
+	std::cout << withoutBrackets << std::endl;
+
 	int count = 0;
 
-	std::cout << str << std::endl;
-	for (int i = 0; i < str.length(); i++) {
-		if (str[i] == '(') {
+	for (int i = 0; i < withoutBrackets.length(); i++) {
+		if (withoutBrackets[i] == '(') {
 			count++;
 		}
-		else if (str[i] == ')') {
+		else if (withoutBrackets[i] == ')') {
 			count--;
 		}
 
-		else if (count == 0 && isOperation(str[i])) {
-			std::cout << "OP: " << str[i] << std::endl;
-			if (str[i] == KLEENE_STAR) {
-				std::cout << "Substr: " << str.substr(0, 1);
-				return new UnaryOperation(parseExpr(str.substr(1, i - 1)), KLEENE_STAR); 
+		else if (count == 0 && isOperation(withoutBrackets[i])) {
+			//std::cout << "OP: " << withoutBrackets[i] << std::endl;
+			if (withoutBrackets[i] == KLEENE_STAR) {
+				//std::cout << "Substr: " << withoutBrackets.substr(1, withoutBrackets.length() - 3) << std::endl;
+				RegEx* uo = new UnaryOperation(parseExpr(withoutBrackets.substr(1, withoutBrackets.length() - 3)), KLEENE_STAR);
+
+				return uo; 
 			}
 			else {
-				std::cout << "Substrings: " << str.substr(0, i) << "|" << str.substr(i + 1, str.length() - i - 1) << std::endl;
-				return new BinaryOperation(parseExpr(str.substr(0, i)), parseExpr(str.substr(i + 1, str.length() - i - 1)), str[i]); 
+				//std::cout << "Substrings: " << withoutBrackets.substr(0, i) << "  |  " << withoutBrackets.substr(i + 1, withoutBrackets.length() - i - 1) << std::endl;
+				RegEx* bo = new BinaryOperation(parseExpr(withoutBrackets.substr(0, i)), parseExpr(withoutBrackets.substr(i + 1, withoutBrackets.length() - i - 1)), withoutBrackets[i]);
+				return bo; 
 			}
 		}
 	}

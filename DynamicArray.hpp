@@ -41,10 +41,12 @@ public:
 
 	void erase(size_t pos);
 	void clear(); // erase all elements from the vector and leave it with a size of 0 
+
+	size_t getCapacity() const;
 };
 
 template <typename T>
-DynamicArray<T>::DynamicArray() : DynamicArray(8) {}
+DynamicArray<T>::DynamicArray() : DynamicArray(13) {}
 
 static size_t closestPowerOfAwo(size_t n)
 {
@@ -124,27 +126,31 @@ void DynamicArray<T>::moveFrom(DynamicArray&& other)
 {
 	arr = other.arr;
 	other.arr = nullptr;
+
+	capacity = other.capacity;
 	size = other.size;
+
+	other.capacity = other.size = 0;
 }
 
 template <typename T>
 void DynamicArray<T>::free()
 {
 	delete[] arr;
+	arr = nullptr;
 }
 
 template <typename T>
 void DynamicArray<T>::resize(size_t newCap)
 {
-
-	T* temp = arr;
-	arr = new T[newCap];
+	T* temp = new T[newCap];
 
 	for (size_t i = 0; i < size; i++)
-		arr[i] = temp[i];
+		temp[i] = arr[i];
 
 	capacity = newCap;
-	delete[] temp;
+	delete[] arr;
+	arr = temp;
 }
 
 template <typename T>
@@ -238,4 +244,9 @@ void DynamicArray<T>::erase(size_t pos) {
 template <typename T>
 void DynamicArray<T>::clear() {
 	size = 0;
+}
+
+template <typename T>
+size_t DynamicArray<T>::getCapacity() const {
+	return capacity;
 }
