@@ -346,8 +346,9 @@ bool NDFA::isReachable(size_t fromInd, size_t destInd) const{
 	// Make a list of all states reachable from the fromState 
 	// Using a bool array isn't optimal in terms of memory because a bool only uses 1 bit out of 8 
 	// However, for the sake of simplicity, I am going to use a bool array 
-	size_t reachableCount = 0;
-	bool* reachable = new bool[_allStates.getSize()];
+	size_t reachableCount = 1;
+	size_t arrSize = _allStates.getSize();
+	bool* reachable = new bool[arrSize] { false };
 
 	// The fromState is reachable from itself in 0 steps 
 	reachable[fromInd] = 1; 
@@ -358,15 +359,16 @@ bool NDFA::isReachable(size_t fromInd, size_t destInd) const{
 		bool flag = 0; 
 
 		// Go through all states in the reachable array 
-		for (int i = 0; i < reachableCount; i++) {
-
-			// For each states in the reachable array, add the destination states from all one step transitions 
-			// to the array of reachable states. A destination state is qj in (qi, x) = qj 
-			for (int j = 0; j < _allStates[i].getNumberOfTransitions(); i++) {
+		for (int i = 0; i < arrSize; i++) {
+			// Skip the unreachable states 
+			if (reachable[i] == 0) {
+				continue;
+			}
+			// For each states that is reachable, add the destination states from all one step transitions as reachable. A destination state is qj in (qi, x) = qj 
+			for (int j = 0; j < _allStates[i].getNumberOfTransitions(); j++) {
 
 				// If we are about to add a state that wasn't in the array initially 
-				// This check is necessary because of the flag 
-				if (reachable[_allStates[i][j].getSecond()] == 0) {
+				if (!reachable[_allStates[i][j].getSecond()]) {
 					flag = 1;
 					reachable[_allStates[i][j].getSecond()] = 1;
 				}
@@ -378,6 +380,7 @@ bool NDFA::isReachable(size_t fromInd, size_t destInd) const{
 			break; 
 		}
 	}
+
 	bool isReachable = (reachable[destInd] == 1);
 
 	delete[] reachable;
