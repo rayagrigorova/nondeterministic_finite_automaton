@@ -15,6 +15,7 @@ NDFA::NDFA(const DynamicArray<size_t>& finalStates, const DynamicArray<size_t>& 
 NDFA::NDFA(const MyString& str){
 	RegExCalculator calc(str);
 	NDFA res = calc.buildAutomaton(); 
+	*this = res;
 }
 
 void NDFA::determinize() {
@@ -62,17 +63,25 @@ bool NDFA::accept(const StringView& word, int currentState) const{
 		return true;
 	}
 
-	// Go through all states 
-	for (int i = 0; i < _allStates.getSize(); i++) {	
+	//// Go through all states 
+	//for (int i = 0; i < _allStates.getSize(); i++) {	
 
-		// Go through all transitions of the current state 
-		for (int j = 0; j < _allStates[i].getNumberOfTransitions(); j++) {
-			// If there is a transition from state qi to qj with the first letter of the word, proceed to the
-			// next state and remove the first letter of the word. 
-			if (_allStates[i][j].getFirst() == word[0]) {
-				// Recursive call 
-				accept(word.substr(1, word.length() - 1), _allStates[i][j].getSecond());
-			}
+	//	// Go through all transitions of the current state 
+	//	for (int j = 0; j < _allStates[i].getNumberOfTransitions(); j++) {
+	//		// If there is a transition from state qi to qj with the first letter of the word, proceed to the
+	//		// next state and remove the first letter of the word. 
+	//		if (_allStates[i][j].getFirst() == word[0]) {
+	//			// Recursive call 
+	//			accept(word.substr(1, word.length() - 1), _allStates[i][j].getSecond());
+	//		}
+	//	}
+	//}
+
+	// Go through all transitions of the current state 
+	for (int i = 0; i < _allStates[currentState].getNumberOfTransitions(); i++) {
+		// If there is a transition with the first letter of the word 
+		if (_allStates[currentState][i].getFirst() == word[0]) {
+			return accept(word.substr(1, word.length() - 1), _allStates[currentState][i].getSecond()); 
 		}
 	}
 
