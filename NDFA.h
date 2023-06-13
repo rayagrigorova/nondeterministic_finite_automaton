@@ -44,7 +44,7 @@ public:
 	friend NDFA concatenation(NDFA&& a1, NDFA&& a2);
 
 	friend NDFA kleeneStar(const NDFA& a);
-	friend NDFA kleeneStar(NDFA&& a);
+	//friend NDFA kleeneStar(NDFA& a);
 
 	MyString getRegEx() const; 
 
@@ -59,6 +59,6 @@ NDFA kleeneStar(const NDFA& a);
 
 NDFA Union(NDFA&& a1, NDFA&& a2);
 NDFA concatenation(NDFA&& a1, NDFA&& a2);
-NDFA kleeneStar(NDFA&& a);
+//NDFA kleeneStar(NDFA& a);
 
 NDFA getAutomatonForRegEx(MyString regEx);

@@ -14,17 +14,7 @@ NDFA::NDFA(const DynamicArray<size_t>& finalStates, const DynamicArray<size_t>& 
 
 NDFA::NDFA(const MyString& str){
 	RegExCalculator calc(str);
-
-	//std::cout << "REG EX BUILD:\n\n";
-	//calc.getRegEx()->print();
-	
 	NDFA res = calc.buildAutomaton(); 
-
-	//_initialStates = res._initialStates;
-	//_finalStates = res._finalStates;
-	//_allStates = res._allStates;
-
-	// *this = calc.buildAutomaton()
 }
 
 void NDFA::determinize() {
@@ -101,7 +91,6 @@ MyString NDFA::getRegEx() const {
 
 // The result of creating an union automaton is like "putting the automata next to each other"
 NDFA Union(const NDFA& a1, const NDFA& a2) {	
-	return NDFA();
 	NDFA res(a1);
 
 	// Get the maximal index for a state in the second automaton 
@@ -162,8 +151,9 @@ NDFA Union(NDFA&& a1, NDFA&& a2) {
 
 NDFA concatenation(NDFA&& a1, NDFA&& a2) {
 	size_t indexingStart = a1._allStates.getSize(); 
+	size_t firstAutomatonInitialCount = a1._initialStates.getSize(); // to remove the states of the second automaton as initial 
 
-	if (!a1.accept(&EPSILON)) {
+	if (!a2.accept(&EPSILON)) {
 		// The final states of the concatenation automaton are only the final states of the second automaton 
 		a1._finalStates.clear(); 
 	}
@@ -191,20 +181,22 @@ NDFA concatenation(NDFA&& a1, NDFA&& a2) {
 			}
 		}
 	}
+
+	// Remove the states of the second automaton as initial 
+	for (int i = 0; i < res._initialStates.getSize() - firstAutomatonInitialCount; i++) {
+		res._initialStates.popBack();
+	}
+
 	std::cout << "CONCATENATION AUTOMATON:\n\n";
 	res.print(); 
+
 	return res;
 }
 
 NDFA concatenation(const NDFA& a1, const NDFA& a2) {
 	size_t indexingStart = a1._allStates.getSize();
-
-	NDFA a1Copy(a1); 
-
-	if (!a1.accept(&EPSILON)) {
-		// The final states of the concatenation automaton are only the final states of the second automaton 
-		a1Copy._finalStates.clear();
-	}
+	size_t firstAutomatonInitialCount = a1._initialStates.getSize(); // to remove the states of the second automaton as initial 
+	size_t firstAutomatonFinalCount = a1._finalStates.getSize(); // to remove the states of the second automaton as initial 
 
 	// "Put the automata next to each other"
 	NDFA res(Union(a1, a2));
@@ -213,37 +205,64 @@ NDFA concatenation(const NDFA& a1, const NDFA& a2) {
 
 	// All initial states of the second automaton 
 	for (int i = 0; i < a2._initialStates.getSize(); i++) {
+		// The index of the current initial state in the array of states 
+		int initialStateInd = a2._initialStates[i];
+
 		// All outgoing transitions of the current state 
-		for (int j = 0; j < a2._allStates[i].getNumberOfTransitions(); i++) {
+		for (int j = 0; j < a2._allStates[i].getNumberOfTransitions(); j++) {
+
 			// All final states of the first automaton 
 			for (int k = 0; k < res._finalStates.getSize(); k++) {
-				res._allStates[k].addTransition(a2._allStates[i][j].getFirst(), a2._allStates[i][j].getSecond() + indexingStart);
+
+				// The index of the current final state in the array of states 
+				int finalInd = res._finalStates[k];
+
+				res._allStates[finalInd].addTransition(a2._allStates[initialStateInd][j].getFirst(), a2._allStates[initialStateInd][j].getSecond() + indexingStart);
 			}
 		}
 	}
-	return res;
-}
 
-NDFA kleeneStar(NDFA&& a) {
-	// Add a new state
-	a._allStates.pushBack(State());
-	size_t indexInArr = a._allStates.getSize() - 1;
+	// Remove the states of the second automaton as initial
+	for (int i = 0; i < res._initialStates.getSize() - firstAutomatonInitialCount; i++) {
+		res._initialStates.popBack();
+	}
 
-	// Copy all outgoing transitions of initial states from the old automaton 
-	for (int i = 0; i < a._initialStates.getSize(); i++) {
-		for (int j = 0; j < a._allStates[i].getNumberOfTransitions(); i++) {
-			a._allStates[indexInArr].addTransition (a._allStates[i][j].getFirst(), a._allStates[i][j].getSecond());
+	// Remove the states of the first automaton as final if needed 
+	if (!a2.accept(&EPSILON)) {
+		for (int i = 0; i < firstAutomatonFinalCount; i++) {
+			res._finalStates.popBack();
 		}
 	}
 
-	// Remove all other initial states as initial states 
-	a._initialStates.clear(); 
-	// Add the new state as a final and initial state 
-	a._initialStates.pushBack(a._allStates.getSize() - 1); 
-	a._finalStates.pushBack(a._allStates.getSize() - 1);
-	 
-	return a; 
+	return res;
 }
+
+//NDFA kleeneStar(NDFA& a) {
+//	// Add a new state
+//	a._allStates.pushBack(State());
+//	size_t indexInArr = a._allStates.getSize() - 1;
+//
+//	a._finalStates.pushBack(indexInArr);
+//
+//	// Copy all outgoing transitions of initial states for all final states 
+//	for (int i = 0; i < a._initialStates.getSize(); i++) { // for all initial states
+//		for (int j = 0; j < a._allStates[i].getNumberOfTransitions(); i++) { // for each transition
+//			for (int k = 0; k < a._finalStates.getSize(); k++) {
+//				a._allStates[indexInArr].addTransition(a._allStates[i][j].getFirst(), a._allStates[i][j].getSecond());
+//			}
+//		}
+//	}
+//
+//	// Remove all other initial states as initial states 
+//	a._initialStates.clear(); 
+//	// Add the new state as a final and initial state 
+//	a._initialStates.pushBack(indexInArr);
+//
+//	std::cout << "KLEENE STAR AUTOMATON\n\n";
+//	a.print(); 
+//	 
+//	return a; 
+//}
 
 NDFA kleeneStar(const NDFA& a) {
 	// Add a new state
@@ -251,18 +270,29 @@ NDFA kleeneStar(const NDFA& a) {
 	copyA._allStates.pushBack(State());
 	size_t indexInArr = copyA._allStates.getSize() - 1;
 
-	// Copy all outgoing transitions of initial states from the old automaton 
-	for (int i = 0; i < copyA._initialStates.getSize(); i++) {
-		for (int j = 0; j < copyA._allStates[i].getNumberOfTransitions(); i++) {
-			copyA._allStates[indexInArr].addTransition(copyA._allStates[i][j].getFirst(), copyA._allStates[i][j].getSecond());
+	copyA._finalStates.pushBack(indexInArr);
+
+	// Copy all outgoing transitions of initial states from the old automaton for the final states. 
+	for (int i = 0; i < copyA._initialStates.getSize(); i++) { // for all initial states 
+		size_t initialInd = copyA._initialStates[i]; 
+
+		for (int j = 0; j < copyA._allStates[i].getNumberOfTransitions(); j++) { // for each transition 
+			for (int k = 0; k < copyA._finalStates.getSize(); k++) {
+				size_t finalInd = copyA._finalStates[k];
+				copyA._allStates[finalInd].addTransition(copyA._allStates[initialInd][j].getFirst(), copyA._allStates[initialInd][j].getSecond());
+			}
 		}
 	}
 
 	// Remove all other initial states as initial states 
 	copyA._initialStates.clear();
+
 	// Add the new state as copyA final and initial state 
-	copyA._initialStates.pushBack(copyA._allStates.getSize() - 1);
-	copyA._finalStates.pushBack(copyA._allStates.getSize() - 1);
+	copyA._initialStates.pushBack(indexInArr);
+
+
+	std::cout << "KLEENE STAR AUTOMATON\n\n";
+	copyA.print();
 
 	return copyA;
 }
@@ -350,8 +380,9 @@ void NDFA::print() const {
 	std::cout << "Transitions:\n";
 
 	for (int i = 0; i < _allStates.getSize(); i++) {
-		std::cout << "Start state: " << i << " "; 
+		std::cout << "Current state: " << i << " "; 
 		_allStates[i].print();
+		std::cout << "\n";
 	}
 	std::cout << std::endl << std::endl;
 }
