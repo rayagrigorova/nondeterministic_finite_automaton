@@ -91,6 +91,11 @@ bool NDFA::accept(const StringView& word, int currentState) const{
 }
 
 bool NDFA::isEmptyLanguage() const {
+	for (int i = 0; i < _finalStates.getSize(); i++) {
+		if (isReachable(_finalStates[i])) {
+			return false;
+		}
+	}
 	return true;
 }
 
@@ -108,7 +113,11 @@ NDFA Union(const NDFA& a1, const NDFA& a2) {
 
 	// Copy states 
 	for (int i = 0; i < size2; i++) {
-		res._allStates.pushBack(a2._allStates[i]);
+		res._allStates.pushBack(State());
+		size_t newStateInd = res._allStates.getSize() - 1;
+		for (int j = 0; j < a2._allStates[i].getNumberOfTransitions(); j++) {
+			res._allStates[newStateInd].addTransition(a2._allStates[i][j].getFirst(), a2._allStates[i][j].getSecond() + size1);
+		}
 	}
 
 	// Copy initial 
@@ -137,7 +146,12 @@ NDFA Union(NDFA&& a1, NDFA&& a2) {
 
 	// Copy states 
 	for (int i = 0; i < size2; i++) {
-		res._allStates.pushBack(a2._allStates[i]);
+		res._allStates.pushBack(State());
+		size_t newStateInd = res._allStates.getSize() - 1;
+
+		for (int j = 0; j < a2._allStates[i].getNumberOfTransitions(); j++) {
+			res._allStates[newStateInd].addTransition(a2._allStates[i][j].getFirst(), a2._allStates[i][j].getSecond() + size1);
+		}
 	}
 
 	// Copy initial 
@@ -159,29 +173,26 @@ NDFA Union(NDFA&& a1, NDFA&& a2) {
 }
 
 NDFA concatenation(NDFA&& a1, NDFA&& a2) {
-	size_t indexingStart = a1._allStates.getSize(); 
-	size_t firstAutomatonInitialCount = a1._initialStates.getSize(); // to remove the states of the second automaton as initial 
+	bool acceptEpsilon = a2.accept(&EPSILON); 
+	size_t indexingStart = a1._allStates.getSize(); // change the indices of the states of the second automaton 
 
-	if (!a2.accept(&EPSILON)) {
-		// The final states of the concatenation automaton are only the final states of the second automaton 
-		a1._finalStates.clear(); 
-	}
+	size_t secondAutomatonInitialCount = a2._initialStates.getSize(); // to remove the states of the second automaton as initial 
+	size_t firstAutomatonFinalCount = a1._finalStates.getSize(); // to remove final states of the first automaton if necessary 
 
 	// "Put the automata next to each other"
 	NDFA res(Union(std::move(a1), std::move(a2)));
 
-	// Add all outgoing transitions from start states of the second automatons to the end states of the first automaton 
+	// Add all outgoing transitions from start states of the second automaton to the end states of the first automaton 
 
-	// All initial states of the second automaton 
-	for (int i = 0; i < a2._initialStates.getSize(); i++) {
+	for (int i = 0; i < a2._initialStates.getSize(); i++) { // For all initial states of the second automaton 
 		// The index of the current initial state in the array of states 
 		int initialStateInd = a2._initialStates[i]; 
 
 		// All outgoing transitions of the current state 
-		for (int j = 0; j < a2._allStates[i].getNumberOfTransitions(); j++) {
+		for (int j = 0; j < a2._allStates[initialStateInd].getNumberOfTransitions(); j++) {
 
 			// All final states of the first automaton 
-			for (int k = 0; k < res._finalStates.getSize(); k++) {
+			for (int k = 0; k < firstAutomatonFinalCount; k++) {
 
 				// The index of the current final state in the array of states 
 				int finalInd = res._finalStates[k];
@@ -192,8 +203,15 @@ NDFA concatenation(NDFA&& a1, NDFA&& a2) {
 	}
 
 	// Remove the states of the second automaton as initial 
-	for (int i = 0; i < res._initialStates.getSize() - firstAutomatonInitialCount; i++) {
+	for (int i = 0; i < secondAutomatonInitialCount; i++) {
 		res._initialStates.popBack();
+	}
+	
+	// Remove the states of the first automaton as final if needed 
+	if (!acceptEpsilon) {
+		for (int i = 0; i < firstAutomatonFinalCount; i++) {
+			res._finalStates.erase(i);
+		}
 	}
 
 	std::cout << "CONCATENATION AUTOMATON:\n\n";
@@ -204,7 +222,7 @@ NDFA concatenation(NDFA&& a1, NDFA&& a2) {
 
 NDFA concatenation(const NDFA& a1, const NDFA& a2) {
 	size_t indexingStart = a1._allStates.getSize();
-	size_t firstAutomatonInitialCount = a1._initialStates.getSize(); // to remove the states of the second automaton as initial 
+	size_t secondAutomatonInitialCount = a2._initialStates.getSize(); // to remove the states of the second automaton as initial 
 	size_t firstAutomatonFinalCount = a1._finalStates.getSize(); // to remove the states of the second automaton as initial 
 
 	// "Put the automata next to each other"
@@ -218,10 +236,10 @@ NDFA concatenation(const NDFA& a1, const NDFA& a2) {
 		int initialStateInd = a2._initialStates[i];
 
 		// All outgoing transitions of the current state 
-		for (int j = 0; j < a2._allStates[i].getNumberOfTransitions(); j++) {
+		for (int j = 0; j < a2._allStates[initialStateInd].getNumberOfTransitions(); j++) {
 
 			// All final states of the first automaton 
-			for (int k = 0; k < res._finalStates.getSize(); k++) {
+			for (int k = 0; k < firstAutomatonFinalCount; k++) {
 
 				// The index of the current final state in the array of states 
 				int finalInd = res._finalStates[k];
@@ -232,7 +250,7 @@ NDFA concatenation(const NDFA& a1, const NDFA& a2) {
 	}
 
 	// Remove the states of the second automaton as initial
-	for (int i = 0; i < res._initialStates.getSize() - firstAutomatonInitialCount; i++) {
+	for (int i = 0; i < secondAutomatonInitialCount; i++) {
 		res._initialStates.popBack();
 	}
 
@@ -312,7 +330,7 @@ NDFA getAutomatonForRegEx(MyString regEx){
 }
 
 // This function will only be used to call the overload isReachable(fromInd, stateInd) for all start states 
-bool NDFA::isReachable(size_t stateInd) {
+bool NDFA::isReachable(size_t stateInd) const{
 	for (int i = 0; i < _initialStates.getSize(); i++) {
 		if (isReachable(i, stateInd)) {
 			return true;
@@ -321,7 +339,7 @@ bool NDFA::isReachable(size_t stateInd) {
 	return false;
 }
 
-bool NDFA::isReachable(size_t fromInd, size_t destInd) {
+bool NDFA::isReachable(size_t fromInd, size_t destInd) const{
 	// A state qj is reachable from a state qi if there exists a natural number n: 
 	// qj is reachable from qi i n steps 
 

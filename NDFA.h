@@ -19,8 +19,8 @@ class NDFA {
 
 	bool accept(const StringView& word, int currentState) const; 
 
-	bool isReachable(size_t stateInd);
-	bool isReachable(size_t fromInd, size_t destInd); // check if a state is reachable through some initial state
+	bool isReachable(size_t stateInd) const;
+	bool isReachable(size_t fromInd, size_t destInd) const; // check if a state is reachable through some initial state
 
 public:
 	NDFA() = default; 

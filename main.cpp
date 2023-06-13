@@ -6,9 +6,12 @@
 int main() {
     //NDFA a("(a.b)");
     //NDFA a("(a+b)");
-    NDFA a("((a)*)");
+    NDFA a("((a.b)+(b.a))");
 
-    std::cout << a.accept(&EPSILON);
+    std::cout << a.isEmptyLanguage() << std::endl;
+    std::cout << a.accept("ba") << std::endl;
+    std::cout << a.accept("ab") << std::endl;
+
     //std::cout << a.accept("baa");
 }
 
