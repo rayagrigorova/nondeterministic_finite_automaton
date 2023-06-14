@@ -302,6 +302,7 @@ NDFA generateMinimalAutomaton(const DynamicArray<DynamicArray<size_t>>& newState
 
 	for (int i = 0; i < newStates.getSize(); i++) {
 		allStates.pushBack(State()); // Add a new state for the current set of states 
+
 		if (originalAutomaton.isFinal(newStates[i][0])) { // If one of the states is final, then all other states are final too, so check for the first state 
 			finalStates.pushBack(i); 
 		}
@@ -313,13 +314,23 @@ NDFA generateMinimalAutomaton(const DynamicArray<DynamicArray<size_t>>& newState
 				initialStates.pushBack(i);
 			}
 		}
+
+		// Add transitions with all letters 
+		for (int k = 0; k < alphabet.getSize(); k++) {
+			allStates[i].addTransition(alphabet[k], originalAutomaton._allStates[newStates[i][0]].getDestinationState(alphabet[k]));
+		}
 	}
 	return NDFA(std::move(finalStates), std::move(initialStates), std::move(allStates), std::move(alphabet)); 
 }
 
 // Source used: https://store.fmi.uni-sofia.bg/fmi/logic/static/eai/eai.pdf
 void NDFA::minimize() {
-	removeUnreachableStates(); 
+	removeUnreachableStates();
+
+	std::cout << "No unreachable:";
+	this->print();
+	std::cout << "\n\n\n"; 
+
 	determinize();
 
 	size_t numberOfStates = _allStates.getSize();
@@ -372,7 +383,7 @@ void NDFA::minimize() {
 	} while (!ready);
 
 	DynamicArray<DynamicArray<size_t>> newStates; 
-	generateEquivalenceClasses(arr, numberOfStates, newStates); 
+	generateEquivalenceClasses((const bool**)arr, numberOfStates, newStates); 
 	*this = generateMinimalAutomaton(newStates, numberOfStates, *this);
 
 	// For each sub-array
@@ -798,15 +809,18 @@ void NDFA::removeUnreachableStates() {
 				}
 			}
 
+			// For all remaining states 
 			for (int j = 0; j < _allStates.getSize(); j++) {
-				_allStates[i].removeAllTransitionsTo(i);
+				// Remove transitions to the unreachable state 
+				_allStates[j].removeAllTransitionsTo(i);
 
-				for (int k = 0; k < _allStates[i].getNumberOfTransitions(); k++) {
+				for (int k = 0; k < _allStates[j].getNumberOfTransitions(); k++) {
 					// Decrement destination indices that are higher than the unreachable state's 
-					if (_allStates[i][j].getSecond() > i) {
-						_allStates[i][j].setSecond(_allStates[i][j].getSecond() - 1);
+					if (_allStates[j][k].getSecond() > i) {
+						_allStates[j][k].setSecond(_allStates[j][k].getSecond() - 1);
 					}
 				}
+				
 			}
 		}
 	}
