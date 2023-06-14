@@ -4,22 +4,187 @@
 
 NDFA::NDFA(DynamicArray<size_t>&& finalStates, DynamicArray<size_t>&& initialStates, DynamicArray<State>&& allStates)
 	: _finalStates(std::move(finalStates)), _initialStates(std::move(initialStates)), _allStates(std::move(allStates)){
-
+	setAlphabet();
 }
 
 NDFA::NDFA(const DynamicArray<size_t>& finalStates, const DynamicArray<size_t>& initialStates, const DynamicArray<State>& allStates)
 	: _initialStates(initialStates), _finalStates(finalStates), _allStates(allStates){
-
+	setAlphabet();
 }
 
 NDFA::NDFA(const MyString& str){
 	RegExCalculator calc(str);
 	NDFA res = calc.buildAutomaton(); 
 	*this = res;
+	setAlphabet();
+}
+
+NDFA::NDFA(DynamicArray<size_t>&& finalStates, DynamicArray<size_t>&& initialStates, DynamicArray<State>&& allStates, DynamicArray<char>&& alphabet) 
+	: _finalStates(std::move(finalStates)), _initialStates(std::move(initialStates)), _allStates(std::move(allStates)), _alphabet(std::move(alphabet)) {
+
+}
+
+NDFA::NDFA(const DynamicArray<size_t>& finalStates, const DynamicArray<size_t>& initialStates, const DynamicArray<State>& allStates, const DynamicArray<char>& alphabet)
+	: _initialStates(initialStates), _finalStates(finalStates), _allStates(allStates), _alphabet(alphabet){
+
+}
+
+namespace {
+	template <typename T>
+	bool contains(const DynamicArray<T>& arr, const T& elem) {
+		for (int i = 0; i < arr.getSize(); i++) {
+			if (arr[i] == elem) {
+				return true;
+			}
+		}
+		return false;
+	}
+}
+
+void NDFA::setAlphabet() {
+	for (int i = 0; i < _allStates.getSize(); i++) { // for each state
+		for (int j = 0; j < _allStates[i].getNumberOfTransitions(); j++) { // for each transition 
+			if (!contains<char>(_alphabet, _allStates[i][j].getFirst())) {
+				_alphabet.pushBack(_allStates[i][j].getFirst());
+			}
+		}
+	}
+}
+
+namespace {
+	template<typename T>
+	bool areEqual(const DynamicArray<T>& arr1, const DynamicArray<T>& arr2) {
+		size = arr1.getSize();
+		if (size != arr2.getSize()) {
+			return false;
+		}
+
+		for (int i = 0; i < size; i++) {
+			if (arr1[i] != arr2[i]) {
+				return false;
+			}
+		}
+		return true;
+	}
+}
+
+// A deterministic automaton contains no more than one initial state and a single (or no) transition with each letter 
+bool isDeterminisitic(const NDFA& a) {
+	// If the number of initial states is greater than 0, then the automaton isn't deterministic
+	if (a._initialStates.getSize() > 1) {
+		return false;
+	}
+
+	for (int i = 0; i < a._allStates.getSize(); i++) { // for each state
+
+		// I assume that the alphabet only contains symbols a-z
+		int32_t transitionsMask = 0; // store the letters of the outgoing transitions 
+
+
+		for (int j = 0; j < a._allStates[i].getNumberOfTransitions(); j++) { // for each transition 
+
+			// This way, the first bit will correspond to 'a', the second one - to 'b' and so on. 
+			int32_t currentMask = 1 << (32 - (a._allStates[i][j].getFirst() - 'a' + 1)); 
+
+			// (transitionsMask ^ currentMask) will return false if the bit for a transition 
+			// with the same letter as the current transition is set to 1
+			if (!(transitionsMask ^ currentMask)) {
+				return false; 
+			}
+
+			// Add the transition
+			transitionsMask ^= currentMask; 
+		}
+	}
+	return true;
 }
 
 void NDFA::determinize() {
+	if (isDeterminisitic(*this)) {
+		return;
+	}
 
+	// The arrays to be used to create the new automaton 
+	DynamicArray<size_t> finalStates;
+	DynamicArray<size_t> initialStates;
+	DynamicArray<State> allStates;
+
+	allStates.pushBack(State()); 
+	initialStates.pushBack(0);
+
+	DynamicArray<DynamicArray<size_t>> stateSubsets; 
+	DynamicArray<size_t> initial; 
+
+	// Initialize the first state in the state subset - a state containing all initial states of the NDFA
+	for (int i = 0; i < _initialStates.getSize(); i++) {
+		initial.pushBack(_initialStates[i]); 
+	}
+
+	stateSubsets.pushBack(std::move(initial)); 
+
+	size_t currentSubset = 0;
+
+	size_t alphabetSize = _alphabet.getSize();
+
+	while (1) {
+		bool stateAdded = false;
+
+		for (int i = 0; i < alphabetSize; i++) { // for each letter of the alphabet 
+			DynamicArray<size_t> newState; 
+
+			for (int j = 0; j < stateSubsets[currentSubset].getSize(); j++) { // for each state from the current subset 
+
+				size_t currentStateIndex = stateSubsets[currentSubset][j]; 
+
+				for (int k = 0; k < _allStates[currentStateIndex].getNumberOfTransitions(); k++) { // For each transition of the current state 
+					if (_allStates[currentStateIndex][k].getFirst() != _alphabet[i]) {
+						continue;
+					}
+
+					// If the destination state hasn't been added yet 
+					if (!contains<size_t>(newState, _allStates[currentStateIndex][k].getSecond())) {
+						newState.pushBack(_allStates[currentStateIndex][k].getSecond());
+					}
+				}
+			}
+
+			// Check if the new state already exists in the state subsets array 
+			bool found = false;
+			for (int t = 0; t < stateSubsets.getSize(); t++) {
+				if (areEqual<size_t>(stateSubsets[t], newState)) {
+					found = true;
+					break;
+				}
+			}
+
+			if (!found) {
+				// Add to subsets array 
+				stateAdded = true; 
+				stateSubsets.pushBack(std::move(newState));
+
+				// Add to the actual array of states 
+				allStates.pushBack(State()); 
+				allStates[currentSubset].addTransition(_alphabet[i], currentSubset + 1); 
+
+				for (int l = 0; l < _finalStates.getSize(); l++) {
+					// If the added subset contains at least one final state 
+					if (contains<size_t>(stateSubsets[currentSubset + 1], _finalStates[l])) {
+						// Add the newly added state as a final state 
+						finalStates.pushBack(allStates.getSize() - 1);
+					}
+				}
+			}
+		}
+		
+		// If no new states were added 
+		if (!stateAdded) {
+			break;
+		}
+		currentSubset++;
+	}
+
+	*this = NDFA(std::move(finalStates), std::move(initialStates), std::move(allStates), std::move(_alphabet)); 
+	_deterministic = true;
 }
 
 void minimize() {

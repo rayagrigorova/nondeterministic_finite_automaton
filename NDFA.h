@@ -11,21 +11,22 @@ class NDFA {
 
 	DynamicArray<State> _allStates;
 
-	// the following will be set to false each time the automaton
-	// is changed or if it was newly constructed
-	bool _total = false; 
-	bool _minimal = false;
-	bool _deterministic = false;
+	DynamicArray<char> _alphabet; 
 
 	bool accept(const StringView& word, int currentState) const; 
 
 	bool isReachable(size_t stateInd) const;
 	bool isReachable(size_t fromInd, size_t destInd) const; // check if a state is reachable through some initial state
 
+	void setAlphabet();
+
 public:
 	NDFA() = default; 
 	NDFA(DynamicArray<size_t>&& finalStates, DynamicArray<size_t>&& initialStates, DynamicArray<State>&& allStates); 
 	NDFA(const DynamicArray<size_t>& finalStates, const DynamicArray<size_t>& initialStates, const DynamicArray<State>& allStates);
+
+	NDFA(DynamicArray<size_t>&& finalStates, DynamicArray<size_t>&& initialStates, DynamicArray<State>&& allStates, DynamicArray<char>&& alphabet);
+	NDFA(const DynamicArray<size_t>& finalStates, const DynamicArray<size_t>& initialStates, const DynamicArray<State>& allStates, const DynamicArray<char>& alphabet);
 
 	NDFA(const MyString& str); 
 
@@ -51,6 +52,8 @@ public:
 	friend NDFA getAutomatonForRegEx(MyString regEx); 
 
 	void print() const; 
+
+	friend bool isDeterminisitic(const NDFA& a); 
 };
 
 NDFA Union(const NDFA& a1, const NDFA& a2);

@@ -95,15 +95,15 @@ RegEx* RegExCalculator::parseExpr(const StringView& str) {
 		}
 
 		else if (count == 0 && isOperation(withoutBrackets[i])) {
-			//std::cout << "OP: " << withoutBrackets[i] << std::endl;
+			std::cout << "OP: " << withoutBrackets[i] << std::endl;
 			if (withoutBrackets[i] == KLEENE_STAR) {
-				//std::cout << "Substr: " << withoutBrackets.substr(1, withoutBrackets.length() - 3) << std::endl;
+				std::cout << "Substr: " << withoutBrackets.substr(1, withoutBrackets.length() - 3) << std::endl;
 				RegEx* uo = new UnaryOperation(parseExpr(withoutBrackets.substr(1, withoutBrackets.length() - 3)), KLEENE_STAR);
 
 				return uo; 
 			}
 			else {
-				//std::cout << "Substrings: " << withoutBrackets.substr(0, i) << "  |  " << withoutBrackets.substr(i + 1, withoutBrackets.length() - i - 1) << std::endl;
+				std::cout << "Substrings: " << withoutBrackets.substr(0, i) << "  |  " << withoutBrackets.substr(i + 1, withoutBrackets.length() - i - 1) << std::endl;
 				RegEx* bo = new BinaryOperation(parseExpr(withoutBrackets.substr(0, i)), parseExpr(withoutBrackets.substr(i + 1, withoutBrackets.length() - i - 1)), withoutBrackets[i]);
 				return bo; 
 			}
