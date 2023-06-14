@@ -132,6 +132,11 @@ void NDFA::determinize() {
 	size_t newStateIndex = 1;
 
 	while (1) {
+		// If the current set is the null set, don't add any transitions 
+		if (stateSubsets[currentSubset].getSize() == 0) {
+			continue; 
+		}
+
 		// A flag to indicate whether new states were added 
 		bool stateAdded = false;
 
