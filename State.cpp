@@ -29,3 +29,13 @@ void State::print() const {
 		std::cout << "Letter: " << _arr[i].getFirst() << " Destination state: " << _arr[i].getSecond() << std::endl; 
 	}
 }
+
+// This function is intended to work with DFA
+int State::getDestinationState(char ch) const {
+	for (int i = 0; i < _arr.getSize(); i++) {
+		if (_arr[i].getFirst() == ch) {
+			return i;
+		}
+	}
+	return -1;
+}

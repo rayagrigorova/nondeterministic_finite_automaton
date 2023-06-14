@@ -29,6 +29,11 @@ int main() {
     t.determinize();
     t.print();
 
+    NDFA t1("(a+b)");
+    std::cout << "DETERMINIZED:\n\n";
+    t1.determinize();
+    t1.print();
+
     //std::cout << a.accept("baa");
 }
 

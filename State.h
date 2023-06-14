@@ -22,6 +22,8 @@ public:
 
 	void print() const; 
 
+	int getDestinationState(char ch) const; 
+
 	// I want to be able to delete and add transitions 
 	friend class NDFA;
 };

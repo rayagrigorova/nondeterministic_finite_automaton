@@ -20,6 +20,12 @@ class NDFA {
 
 	void setAlphabet();
 
+	// Check if a state is final/initial 
+	bool isFinal(size_t ind) const;
+	bool isInitial(size_t ind) const;
+
+	void removeUnreachableStates();
+
 public:
 	NDFA() = default; 
 	NDFA(DynamicArray<size_t>&& finalStates, DynamicArray<size_t>&& initialStates, DynamicArray<State>&& allStates); 
@@ -54,6 +60,7 @@ public:
 	void print() const; 
 
 	friend bool isDeterminisitic(const NDFA& a); 
+	friend NDFA generateMinimalAutomaton(const DynamicArray<DynamicArray<size_t>>& newStates, size_t numberOfStates, const NDFA& originalAutomaton); 
 };
 
 NDFA Union(const NDFA& a1, const NDFA& a2);
