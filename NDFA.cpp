@@ -53,8 +53,10 @@ void NDFA::setAlphabet() {
 
 namespace {
 	template<typename T>
-	bool areEqual(const DynamicArray<T>& arr1, const DynamicArray<T>& arr2) {
-		size = arr1.getSize();
+	// A function to compare the contents of two dynamic arrays 
+	// The type used should have an operator != 
+	bool arraysAreEqual(const DynamicArray<T>& arr1, const DynamicArray<T>& arr2) {
+		size_t size = arr1.getSize();
 		if (size != arr2.getSize()) {
 			return false;
 		}
@@ -126,53 +128,81 @@ void NDFA::determinize() {
 
 	size_t alphabetSize = _alphabet.getSize();
 
+	// Index the newly added states, starting from 1 
+	size_t newStateIndex = 1;
+
 	while (1) {
+		// A flag to indicate whether new states were added 
 		bool stateAdded = false;
 
 		for (int i = 0; i < alphabetSize; i++) { // for each letter of the alphabet 
+			// A set of states representing the combined result of all delta functions with the current letter
 			DynamicArray<size_t> newState; 
 
 			for (int j = 0; j < stateSubsets[currentSubset].getSize(); j++) { // for each state from the current subset 
 
+				// Get the position of the current state in the _allStates array 
 				size_t currentStateIndex = stateSubsets[currentSubset][j]; 
 
 				for (int k = 0; k < _allStates[currentStateIndex].getNumberOfTransitions(); k++) { // For each transition of the current state 
+					// Skip transitions with other letters 
 					if (_allStates[currentStateIndex][k].getFirst() != _alphabet[i]) {
 						continue;
 					}
 
-					// If the destination state hasn't been added yet 
+					// If the destination state hasn't been added to the new state yet 
 					if (!contains<size_t>(newState, _allStates[currentStateIndex][k].getSecond())) {
 						newState.pushBack(_allStates[currentStateIndex][k].getSecond());
 					}
 				}
 			}
 
-			// Check if the new state already exists in the state subsets array 
-			bool found = false;
+			// Check if the newly created state already exists in the state subsets array 
+			int foundInd = -1; 
 			for (int t = 0; t < stateSubsets.getSize(); t++) {
-				if (areEqual<size_t>(stateSubsets[t], newState)) {
-					found = true;
+				if (arraysAreEqual<size_t>(stateSubsets[t], newState)) {
+					foundInd = t;
 					break;
 				}
 			}
 
-			if (!found) {
-				// Add to subsets array 
+			// If the state hasn't been added yet 
+			if (foundInd < 0) {
+				// Mark that a new state was added
 				stateAdded = true; 
+				// Add to subsets array 
 				stateSubsets.pushBack(std::move(newState));
 
 				// Add to the actual array of states 
 				allStates.pushBack(State()); 
-				allStates[currentSubset].addTransition(_alphabet[i], currentSubset + 1); 
+				allStates[currentSubset].addTransition(_alphabet[i], newStateIndex); 
 
-				for (int l = 0; l < _finalStates.getSize(); l++) {
-					// If the added subset contains at least one final state 
-					if (contains<size_t>(stateSubsets[currentSubset + 1], _finalStates[l])) {
-						// Add the newly added state as a final state 
-						finalStates.pushBack(allStates.getSize() - 1);
+				// Check if the null set was added - if it was, the respective state in the states array 
+				// should have a transition to itself with all letters from the alphabet
+				if (stateSubsets[newStateIndex].getSize() == 0) {
+					for (int h = 0; h < alphabetSize; h++) {
+						allStates[newStateIndex].addTransition(_alphabet[h], newStateIndex);
 					}
 				}
+
+				else {
+					// Chech if the new state contains final states 
+					for (int l = 0; l < _finalStates.getSize(); l++) {
+						// If the added subset contains at least one final state 
+						if (contains<size_t>(stateSubsets[newStateIndex], _finalStates[l])) {
+
+							// Add the newly added state as a final state 
+							finalStates.pushBack(newStateIndex);
+							break;
+						}
+					}
+				}
+
+				newStateIndex++;
+			}
+
+			else {
+				allStates[currentSubset].addTransition(_alphabet[i], foundInd);
 			}
 		}
 		
@@ -180,11 +210,11 @@ void NDFA::determinize() {
 		if (!stateAdded) {
 			break;
 		}
+
 		currentSubset++;
 	}
 
 	*this = NDFA(std::move(finalStates), std::move(initialStates), std::move(allStates), std::move(_alphabet)); 
-	_deterministic = true;
 }
 
 void minimize() {

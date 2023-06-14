@@ -46,7 +46,7 @@ public:
 };
 
 template <typename T>
-DynamicArray<T>::DynamicArray() : DynamicArray(13) {}
+DynamicArray<T>::DynamicArray() : DynamicArray(8) {}
 
 static size_t closestPowerOfAwo(size_t n)
 {
