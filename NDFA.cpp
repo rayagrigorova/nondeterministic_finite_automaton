@@ -372,6 +372,7 @@ void NDFA::minimize() {
 			bool secondIsFinal = isFinal(j);
 
 			// p is final <-> q isn't final 
+			// Mark all pairs where the two states aren't of the same finality 
 			if (firstIsFinal && !secondIsFinal ||
 				!firstIsFinal && secondIsFinal) {
 				arr[i][j] = 0;
@@ -394,7 +395,12 @@ void NDFA::minimize() {
 						int deltaOne = _allStates[i].getDestinationState(_alphabet[k]);
 						int deltaTwo = _allStates[j].getDestinationState(_alphabet[k]);
 
+						std::cout << "DELTA ONE:\n" << deltaOne << std::endl;
+						std::cout << "DELTA TWO:\n" << deltaOne << std::endl;
+
+						// If arr[deltaOne][deltaTwo] is marked 
 						if (!arr[deltaOne][deltaTwo]) {
+							// Mark the current pair of states 
 							arr[i][j] = false;
 							ready = false;
 						}
@@ -405,9 +411,26 @@ void NDFA::minimize() {
 		
 	} while (!ready);
 
+	std::cout << "ARR:\n\n";
+	for (int i = 0; i < numberOfStates; i++) {
+		for (int j = 0; j < numberOfStates; j++) {
+			std::cout << arr[i][j] << ' ';
+		}
+		std::cout << '\n';
+	}
+
 	// The new states are sets of states (they can't be used in the actual automaton ôêø are necessary for its construction)
 	DynamicArray<DynamicArray<size_t>> newStates; 
 	generateEquivalenceClasses((const bool**)arr, numberOfStates, newStates); 
+
+	std::cout << "EQUIVALENCE CLASSES:\n\n";
+	for (int i = 0; i < newStates.getSize(); i++) {
+		for (int j = 0; j < newStates[i].getSize(); j++) {
+			std::cout << newStates[i][j] << " ";
+		}
+		std::cout << std::endl;
+	}
+
 	*this = generateMinimalAutomaton(newStates, numberOfStates, *this);
 
 	// Delete the bool array 
