@@ -208,7 +208,7 @@ void NDFA::determinize() {
 				}
 
 				else {
-					// Chech if the new state contains final states 
+					// Check if the new state contains final states 
 					for (int l = 0; l < _finalStates.getSize(); l++) {
 						// If the added subset contains at least one final state 
 						if (contains<size_t>(stateSubsets[newStateIndex], _finalStates[l])) {
@@ -240,11 +240,15 @@ void NDFA::determinize() {
 }
 
 namespace {
-	// a helper function to find if a pair of states belongs to some equivalence class 
-	int getEquivalenceClassIndex(size_t row, size_t col, const DynamicArray<DynamicArray<size_t>>& newStates) {
+	// A helper function to find if a pair of states belongs to some existing equivalence class 
+	// This is done because equivalence relations have the property of transitivity
+	int getEquivalenceClassIndex(size_t first, size_t second, const DynamicArray<DynamicArray<size_t>>& newStates) {
 		for (int i = 0; i < newStates.getSize(); i++) { // For all equivalence classes 
 			for (int j = 0; j < newStates[i].getSize(); j++) { // for all states in the equivalence class 
-				if (newStates[i][j] == row || newStates[i][j] == col) {
+
+				// First and second are in the same equivalence class and if either
+				// of them is in another equivalence class, the two equivalence classes can be united 
+				if (newStates[i][j] == first || newStates[i][j] == second) {
 					return i; // return the index of the equivalence class 
 				}
 			}
@@ -254,18 +258,19 @@ namespace {
 	}
 
 	void generateEquivalenceClasses(const bool** arr, size_t numberOfStates, DynamicArray<DynamicArray<size_t>>& newStates) {
+		// This is a flag to generate sets for states that aren't equivalent to any other state
+		bool isSingleton;
 
 		// I will only look at the elements below the main diagonal
-		// First, deal with elements that are a part of some equivalence class 
-
-		bool isSingleton;
 		for (int i = 0; i < numberOfStates; i++) { // for each row
 
-			// This is a flag to generate sets for states that aren't equivalent to any other state
+			// States that are not equivalent to any other state are represented by a row of 0's in the table 
 			isSingleton = true;
+
 			for (int j = 0; j < i; j++) { // for each column 
 				// A pair that is a part of some equivalence class 
 				if (arr[i][j]) {
+					// The current state (i) can't be added by itself, it will be a part of some equivalence class 
 					isSingleton = false;
 
 					int ind = getEquivalenceClassIndex(i, j, newStates);
@@ -291,6 +296,19 @@ namespace {
 			}
 		}
 	}
+
+	int findStateEquivalenceClass(const DynamicArray<DynamicArray<size_t>>& equivalenceClasses, size_t stateName) {
+		for (int i = 0; i < equivalenceClasses.getSize(); i++) { // for each class
+			for (int j = 0; j < equivalenceClasses[i].getSize(); j++) { // for each state in the class 
+				if (equivalenceClasses[i][j] == stateName) {
+					// return the index of the equivalence class 
+					return i;
+				}
+			}
+		}
+		// not found
+		return -1;
+	}
 }
 
 // Using the transitions of the old automaton and the created equivalence classes, generate a minimal NDFA 
@@ -300,16 +318,18 @@ NDFA generateMinimalAutomaton(const DynamicArray<DynamicArray<size_t>>& newState
 	DynamicArray<State> allStates;
 	DynamicArray<char> alphabet = originalAutomaton._alphabet;
 
-	for (int i = 0; i < newStates.getSize(); i++) {
+	for (int i = 0; i < newStates.getSize(); i++) { // for each equivalence class 
 		allStates.pushBack(State()); // Add a new state for the current set of states 
 
-		if (originalAutomaton.isFinal(newStates[i][0])) { // If one of the states is final, then all other states are final too, so check for the first state 
+		// If one of the states is final in the original automaton, then all other states are final too, so check for the first state
+		if (originalAutomaton.isFinal(newStates[i][0])) {  
 			finalStates.pushBack(i); 
 		}
 
-		// Find the initial state 
+		// Find the initial state in the current equivalence class 
 		// The equivalence class of the initial state is the initial state of the new automaton 
 		for (int j = 0; j < newStates[i].getSize(); j++) {
+			// The automaton has a single initial state since it's deterministic
 			if (newStates[i][j] == originalAutomaton._initialStates[0]) {
 				initialStates.pushBack(i);
 			}
@@ -317,7 +337,8 @@ NDFA generateMinimalAutomaton(const DynamicArray<DynamicArray<size_t>>& newState
 
 		// Add transitions with all letters 
 		for (int k = 0; k < alphabet.getSize(); k++) {
-			allStates[i].addTransition(alphabet[k], originalAutomaton._allStates[newStates[i][0]].getDestinationState(alphabet[k]));
+			size_t destClass = findStateEquivalenceClass(newStates, originalAutomaton._allStates[newStates[i][0]].getDestinationState(alphabet[k]));
+			allStates[i].addTransition(alphabet[k], destClass);
 		}
 	}
 	return NDFA(std::move(finalStates), std::move(initialStates), std::move(allStates), std::move(alphabet)); 
@@ -333,6 +354,10 @@ void NDFA::minimize() {
 
 	determinize();
 
+	std::cout << "Deterministic:";
+	this->print();
+	std::cout << "\n\n\n";
+
 	size_t numberOfStates = _allStates.getSize();
 
 	// Create a two dimensional bool array (an array of pointers)
@@ -340,10 +365,8 @@ void NDFA::minimize() {
 
 	for (int i = 0; i < numberOfStates; i++) {
 		// Create the sub-arrays 
-		arr[i] = new bool[numberOfStates]; 
-	}
+		arr[i] = new bool[numberOfStates];
 
-	for (int i = 0; i < numberOfStates; i++) {
 		for (int j = 0; j < numberOfStates; j++) {
 			bool firstIsFinal = isFinal(i); 
 			bool secondIsFinal = isFinal(j);
@@ -382,10 +405,12 @@ void NDFA::minimize() {
 		
 	} while (!ready);
 
+	// The new states are sets of states (they can't be used in the actual automaton ôêø are necessary for its construction)
 	DynamicArray<DynamicArray<size_t>> newStates; 
 	generateEquivalenceClasses((const bool**)arr, numberOfStates, newStates); 
 	*this = generateMinimalAutomaton(newStates, numberOfStates, *this);
 
+	// Delete the bool array 
 	// For each sub-array
 	for (int i = 0; i < numberOfStates; i++) {
 		delete[] arr[i];
@@ -431,20 +456,6 @@ bool NDFA::accept(const StringView& word, int currentState) const{
 	if (word.length() == 0) {
 		return true;
 	}
-
-	//// Go through all states 
-	//for (int i = 0; i < _allStates.getSize(); i++) {	
-
-	//	// Go through all transitions of the current state 
-	//	for (int j = 0; j < _allStates[i].getNumberOfTransitions(); j++) {
-	//		// If there is a transition from state qi to qj with the first letter of the word, proceed to the
-	//		// next state and remove the first letter of the word. 
-	//		if (_allStates[i][j].getFirst() == word[0]) {
-	//			// Recursive call 
-	//			accept(word.substr(1, word.length() - 1), _allStates[i][j].getSecond());
-	//		}
-	//	}
-	//}
 
 	// Go through all transitions of the current state 
 	for (int i = 0; i < _allStates[currentState].getNumberOfTransitions(); i++) {
@@ -789,6 +800,7 @@ void NDFA::print() const {
 void NDFA::removeUnreachableStates() {
 	for (int i = 0; i < _allStates.getSize(); i++) {
 		if (!isReachable(i)) {
+			// Remove the unreachable state from the array of states 
 			_allStates.erase(i);
 
 			// Erase the unreachable state from the list of final states if it's in it 
@@ -811,13 +823,15 @@ void NDFA::removeUnreachableStates() {
 
 			// For all remaining states 
 			for (int j = 0; j < _allStates.getSize(); j++) {
-				// Remove transitions to the unreachable state 
-				_allStates[j].removeAllTransitionsTo(i);
 
 				for (int k = 0; k < _allStates[j].getNumberOfTransitions(); k++) {
 					// Decrement destination indices that are higher than the unreachable state's 
 					if (_allStates[j][k].getSecond() > i) {
 						_allStates[j][k].setSecond(_allStates[j][k].getSecond() - 1);
+					}
+					// Remove transitions to the removed state 
+					else if (_allStates[j][k].getSecond() == i) {
+						_allStates[j]._arr.erase(k);
 					}
 				}
 				

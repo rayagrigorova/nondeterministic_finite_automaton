@@ -30,7 +30,7 @@ void State::print() const {
 	}
 }
 
-// This function is intended to work with DFA
+// This function is intended to work with DFAs
 int State::getDestinationState(char ch) const {
 	for (int i = 0; i < _arr.getSize(); i++) {
 		if (_arr[i].getFirst() == ch) {
