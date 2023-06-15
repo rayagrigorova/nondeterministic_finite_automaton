@@ -24,7 +24,7 @@ int main() {
     //std::cout << "Accept: " << t.accept("b") << std::endl;
     //std::cout << "Accept: " << t.accept("aabababa") << std::endl;
 
-    NDFA t("(a.b)");
+
     //std::cout << "DETERMINIZED:\n\n";
     //t.determinize();
     //t.print();
@@ -33,7 +33,7 @@ int main() {
     //std::cout << "DETERMINIZED:\n\n";
     //t1.determinize();
     //t1.print();
-
+    NDFA t("((a.b)+a)");
     std::cout << "MINIMIZED:\n\n";
     t.minimize();
     t.print();

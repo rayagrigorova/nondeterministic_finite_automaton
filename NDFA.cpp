@@ -735,7 +735,8 @@ NDFA getAutomatonForRegEx(MyString regEx){
 // This function will only be used to call the overload isReachable(fromInd, stateInd) for all start states 
 bool NDFA::isReachable(size_t stateInd) const{
 	for (int i = 0; i < _initialStates.getSize(); i++) {
-		if (isReachable(i, stateInd)) {
+		// Initial states are reachable in 0 steps 
+		if (_initialStates[i] == stateInd || isReachable(_initialStates[i], stateInd)) {
 			return true;
 		}
 	}
@@ -744,7 +745,7 @@ bool NDFA::isReachable(size_t stateInd) const{
 
 bool NDFA::isReachable(size_t fromInd, size_t destInd) const{
 	// A state qj is reachable from a state qi if there exists a natural number n: 
-	// qj is reachable from qi i n steps 
+	// qj is reachable from qi in n steps 
 
 	// Make a list of all states reachable from the fromState 
 	// Using a bool array isn't optimal in terms of memory because a bool only uses 1 bit out of 8 
@@ -763,8 +764,8 @@ bool NDFA::isReachable(size_t fromInd, size_t destInd) const{
 
 		// Go through all states in the reachable array 
 		for (int i = 0; i < arrSize; i++) {
-			// Skip the unreachable states 
-			if (reachable[i] == 0) {
+			// Skip the states that are still unreachable 
+			if (!reachable[i]) {
 				continue;
 			}
 			// For each states that is reachable, add the destination states from all one step transitions as reachable. A destination state is qj in (qi, x) = qj 
@@ -784,7 +785,7 @@ bool NDFA::isReachable(size_t fromInd, size_t destInd) const{
 		}
 	}
 
-	bool isReachable = (reachable[destInd] == 1);
+	bool isReachable = reachable[destInd];
 
 	delete[] reachable;
 
@@ -823,6 +824,7 @@ void NDFA::print() const {
 void NDFA::removeUnreachableStates() {
 	for (int i = 0; i < _allStates.getSize(); i++) {
 		if (!isReachable(i)) {
+			std::cout << i << " is unreachable\n\n\n";
 			// Remove the unreachable state from the array of states 
 			_allStates.erase(i);
 
@@ -847,7 +849,7 @@ void NDFA::removeUnreachableStates() {
 			// For all remaining states 
 			for (int j = 0; j < _allStates.getSize(); j++) {
 
-				for (int k = 0; k < _allStates[j].getNumberOfTransitions(); k++) {
+				for (int k = 0; k < _allStates[j].getNumberOfTransitions(); k++) { // for all transitions
 					// Decrement destination indices that are higher than the unreachable state's 
 					if (_allStates[j][k].getSecond() > i) {
 						_allStates[j][k].setSecond(_allStates[j][k].getSecond() - 1);
@@ -859,6 +861,9 @@ void NDFA::removeUnreachableStates() {
 				}
 				
 			}
+
+			std::cout << "CHANGED:\n\n";
+			this->print();
 		}
 	}
 }
