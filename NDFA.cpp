@@ -90,18 +90,17 @@ bool isDeterminisitic(const NDFA& a) {
 
 
 		for (int j = 0; j < a._allStates[i].getNumberOfTransitions(); j++) { // for each transition 
-
-			// This way, the first bit will correspond to 'a', the second one - to 'b' and so on. 
+			// Create a mask for the current transition 
+			// The first bit will correspond to 'a', the second one - to 'b' and so on. 
 			int32_t currentMask = 1 << (32 - (a._allStates[i][j].getFirst() - 'a' + 1)); 
 
-			// (transitionsMask ^ currentMask) will return false if the bit for a transition 
-			// with the same letter as the current transition is set to 1
-			if (!(transitionsMask ^ currentMask)) {
+			// (transitionsMask & currentMask) will return true if there exists a transition with the same letter 
+			if (transitionsMask & currentMask) {
 				return false; 
 			}
 
 			// Add the transition
-			transitionsMask ^= currentMask; 
+			transitionsMask |= currentMask; 
 		}
 
 		// Check if there are transitions with each letter from the alphabet 
@@ -444,11 +443,51 @@ void NDFA::minimize() {
 }
 
 void NDFA::makeTotal() {
+	// A total automaton is such that for each of its
+	// states p and each letter of the alphabet x there exists at least one transition from p with x
+
+	// I will simultaneously check if the automaton is total and if there is a transition with each letter
+	bool isTotal = true;
+	size_t newStateIndex = _allStates.getSize(); // The index of the new state
+
+	for (int i = 0; i < _allStates.getSize(); i++) { // for each state 
+
+		int32_t transitionsMask = 0; // store the letters of the outgoing transitions 
+
+		for (int j = 0; j < _allStates[i].getNumberOfTransitions(); j++) { // for each transition 
+
+			// This way, the first bit will correspond to 'a', the second one - to 'b' and so on. 
+			int32_t currentMask = 1 << (32 - (_allStates[i][j].getFirst() - 'a' + 1));
+
+			// Add the transition
+			transitionsMask |= currentMask;
+		}
+
+		for (int l = 0; l < _alphabet.getSize(); l++) { // for all symbols in the alphabet 
+			int32_t currentMask = 1 << (32 - (_alphabet[l] - 'a' + 1)); // Mask for the current letter of the alphabet
+
+			if (!(transitionsMask & currentMask)) { // Check if the bit for the transition with the current letter is set to false 
+				isTotal = false;
+				// The current state doesn't have a transition with _alphabet[l]. Add a transition to the new state. 
+				_allStates[i].addTransition(_alphabet[l], newStateIndex);
+			}
+		}
+
+	}
+
+	if (!isTotal) {
+		// A new state should be added 
+		_allStates.pushBack(State());
+
+		for (int l = 0; l < _alphabet.getSize(); l++) {
+			// For each letter of the alphabet, ad a self loop to the new state 
+			_allStates[newStateIndex].addTransition(_alphabet[l], newStateIndex);
+		}
+	}
 
 }
 
 bool NDFA::accept(const StringView& word) const{
-	// There are no transitions involved when recognizing epsilon 
 	// The condition under which a language contains epsilon is that for some state qi: 
 	// qi is both initial and final 
 	if (word.length() == 1 && word[0] == EPSILON) {

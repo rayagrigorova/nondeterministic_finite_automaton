@@ -34,8 +34,9 @@ int main() {
     //t1.determinize();
     //t1.print();
     NDFA t("((a.b)+a)");
-    std::cout << "MINIMIZED:\n\n";
-    t.minimize();
+    //std::cout << "MINIMIZED:\n\n";
+    //t.minimize();
+    t.makeTotal();
     t.print();
 
     //std::cout << a.accept("baa");
