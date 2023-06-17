@@ -6,11 +6,6 @@ UnaryOperation::UnaryOperation(RegEx* expr, char op) : _expr(expr), _op(op){
 
 // Valid unary operation: '*' 
 NDFA UnaryOperation::buildAutomatonForLanguage() const {
-	//switch (_op) {
-	//case '*':
-	//	return kleeneStar(_expr->buildAutomatonForLanguage());
-	//}
-
 	if (_op == '*') {
 		NDFA res = kleeneStar(_expr->buildAutomatonForLanguage()); 
 		return res;
@@ -28,4 +23,8 @@ UnaryOperation::~UnaryOperation() {
 void UnaryOperation::print() const {
 	std::cout << "Operation: " << _op << std::endl; 
 	_expr->print(); 
+}
+
+MyString UnaryOperation::toString() const {
+	return _expr->toString() + " " + &_op; 
 }

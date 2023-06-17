@@ -10,5 +10,7 @@ protected:
 
 public: 
 	Symbol(char ch) : _ch(ch){}
-	virtual void print() const override { std::cout << "Character: " << _ch << std::endl; }
+	void print() const override { std::cout << "Character: " << _ch << std::endl; }
+
+	MyString toString() const override { return MyString(&_ch);  }
 };

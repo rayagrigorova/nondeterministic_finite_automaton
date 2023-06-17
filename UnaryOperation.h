@@ -15,4 +15,6 @@ public:
 	~UnaryOperation();
 
 	virtual void print() const override; 
+
+	virtual MyString toString() const override;
 };

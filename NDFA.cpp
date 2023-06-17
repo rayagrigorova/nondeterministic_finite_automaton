@@ -2,6 +2,12 @@
 #include "RegExCalculator.h"
 #include "SymbolConstants.h"
 
+#include "Letter.h"
+#include "BinaryOperation.h"
+#include "UnaryOperation.h"
+#include "Epsilon.h"
+#include "NullSet.h"
+
 namespace {
 	template <typename T>
 	bool contains(const DynamicArray<T>& arr, const T& elem) {
@@ -514,6 +520,7 @@ bool NDFA::accept(const StringView& word) const{
 }
 
 bool NDFA::accept(const StringView& word, int currentState) const{
+
 	// Base of the recursion 
 	if (word.length() == 0) {
 		return true;
@@ -541,8 +548,61 @@ bool NDFA::isEmptyLanguage() const {
 	return true;
 }
 
+// Source used: https://www.fit.vut.cz/research/project-file/589/Presentations/PB05-Converting-FAs-To-REs.pdf
+// Method used: transitive closure 
 MyString NDFA::getRegEx() const {
-	return "";
+	if (!isDeterminisitic(*this)) {
+		throw std::invalid_argument("For the transitive closure method to work, the automaton should be a DFA\n"); 
+	}
+
+	// I am going to use the Rijk construction 
+	DynamicArray<DynamicArray<DynamicArray<RegEx*>>> R;
+	
+	// Initialize Rij0
+	for (int i = 0; i < _allStates.getSize(); i++) { // For all states 
+
+		for (int j = 0; j < _allStates.getSize(); j++) { // For each pair of states
+			if (i == j) {
+				R[i][j][0] = new Epsilon();
+			}
+			else {
+				R[i][j][0] = new NullSet();
+			}
+
+			for (int t = 0; t < _allStates[i].getNumberOfTransitions(); t++) { // for all transitions of i
+				R[i][j][0] = new BinaryOperation(R[i][j][0], new Letter(_allStates[i][t].getFirst()), '+');
+			}
+		}
+		
+	}
+
+	// Computation for all Rijk where i, j, k are{ 1, |Q| }
+
+	for (int i = 0; i < _allStates.getSize(); i++) { // For all states 
+		for (int j = 0; j < _allStates.getSize(); j++) { // For each pair of states
+			for (int k = 0; k < _allStates.getSize(); k++) {
+				// Rij(k) = Rij(k-1) + Rik(k-1) . ( Rkk(k-1))*Rkj(k-1)
+				RegEx* ex1 = new UnaryOperation(R[k][k][k - 1]->clone(), '*'); 
+				RegEx* ex2 = new BinaryOperation(ex1, R[i][k][k-1], '.');
+				RegEx* ex3 = new BinaryOperation(ex2, R[k][j][k - 1], '.');
+				RegEx* ex4 = new BinaryOperation(R[i][j][k - 1], ex3, '+');
+
+				R[i][j][k] = ex4;
+			}
+		}
+	}
+
+	RegEx* expr = new NullSet();
+	size_t initialInd = _initialStates[0];
+	for (int i = 0; i < _allStates.getSize(); i++) {
+		if (isFinal(i)) {
+			expr = new BinaryOperation(expr, R[initialInd][i][_allStates.getSize()], '+'); 
+		}
+	}
+
+	MyString res = expr->toString();
+	delete expr;
+	return res;
 }
 
 // The result of creating an union automaton is like "putting the automata next to each other"

@@ -10,4 +10,6 @@ public:
 	virtual RegEx* clone() const = 0;
 
 	virtual void print() const = 0;
+
+	virtual MyString toString() const = 0;
 };

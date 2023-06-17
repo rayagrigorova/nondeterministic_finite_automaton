@@ -4,8 +4,8 @@
 
 // Binary operations: '+' and '.' 
 class BinaryOperation : public RegEx {
-	RegEx* _lhs;
-	RegEx* _rhs; 
+	RegEx* _lhs = nullptr;
+	RegEx* _rhs = nullptr; 
 
 	char _op; 
 public: 
@@ -18,4 +18,12 @@ public:
 	~BinaryOperation(); 
 
 	virtual void print() const override;
+
+	void setRhs(RegEx* rhs);
+	void setLhs(RegEx* lhs);
+
+	const RegEx* getRhs() const;
+	const RegEx* getLhs() const;
+
+	virtual MyString toString() const override;
 };
