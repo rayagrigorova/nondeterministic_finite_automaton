@@ -24,6 +24,8 @@ RegEx* BinaryOperation::clone() const {
 BinaryOperation::~BinaryOperation() {
 	delete _lhs;
 	delete _rhs; 
+
+	_lhs = _rhs = nullptr;
 }
 
 void BinaryOperation::print() const {

@@ -18,6 +18,7 @@ RegEx* UnaryOperation::clone() const {
 
 UnaryOperation::~UnaryOperation() {
 	delete _expr;
+	_expr = nullptr;
 }
 
 void UnaryOperation::print() const {

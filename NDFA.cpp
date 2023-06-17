@@ -582,7 +582,7 @@ MyString NDFA::getRegEx() const {
 		R[i] = new RegEx * *[Q];
 
 		for (int j = 0; j < Q; j++) { // For each pair of states
-			R[i][j] = new RegEx *[Q]; // 0 to Q for k 
+			R[i][j] = new RegEx *[Q + 1]; // 0 to Q for k 
 
 			if (i == j) {
 				R[i][j][0] = new Epsilon();
@@ -594,7 +594,7 @@ MyString NDFA::getRegEx() const {
 			for (int t = 0; t < _allStates[i].getNumberOfTransitions(); t++) { // for all transitions of i
 				// If the current  transition is from qi to qj
 				if (_allStates[i][t].getSecond() == j) {
-					R[i][j][0] = new BinaryOperation(R[i][j][0], new Letter(_allStates[i][t].getFirst()), '+');
+					R[i][j][0] = new BinaryOperation(R[i][j][0]->clone(), new Letter(_allStates[i][t].getFirst()), '+');
 				}
 			}
 		}
@@ -609,25 +609,29 @@ MyString NDFA::getRegEx() const {
 				// Rij(k) = Rij(k-1) + Rik(k-1) . Rkk(k-1))* . Rkj(k-1)
 
 				RegEx* ex1 = new UnaryOperation(R[k - 1][k - 1][k - 1]->clone(), '*'); // (R[k,k,k-1])*
-				RegEx* ex2 = new BinaryOperation(R[i][k - 1][k - 1], ex1, '.'); // Rik(k-1)
-				RegEx* ex3 = new BinaryOperation(ex2, R[k - 1][j][k - 1], '.'); // Rkj(k-1)
-				RegEx* ex4 = new BinaryOperation(R[i][j][k - 1], ex3, '+'); // Rij(k-1) + Rik(k-1) . Rkk(k-1))* . Rkj(k-1)
+				RegEx* ex2 = new BinaryOperation(R[i][k - 1][k - 1]->clone(), ex1->clone(), '.'); // Rik(k-1)
+				RegEx* ex3 = new BinaryOperation(ex2->clone(), R[k - 1][j][k - 1]->clone(), '.'); // Rkj(k-1)
+				RegEx* ex4 = new BinaryOperation(R[i][j][k - 1]->clone(), ex3->clone(), '+'); // Rij(k-1) + Rik(k-1) . Rkk(k-1))* . Rkj(k-1)
 
 				R[i][j][k] = ex4;
 			}
 		}
 	}
 
-	for (int k = 0; k < Q; k++) {
-		for (int i = 0; i < Q; i++) {
-			for (int j = 0; j < Q; j++) {
-				std::cout << std::setw(10);
-				std::cout << R[i][j][k]->toString();
+	//	for (int i = 0; i < Q; i++) {
+	//		for (int j = 0; j < Q; j++) {
+	//			for (int k = 0; k <= 2; k++) {
+	//			std::cout << std::setw(15);
+	//			std::cout << R[i][j][k]->toString();
 
-			}
-			std::cout << "\n";
-		}
-	}
+	//		}
+	//		std::cout << "\n";
+	//	}
+	//}
+		//std::cout << R[0][0][0]->toString() << std::endl;
+		//std::cout << R[0][0][1]->toString() << std::endl;
+		//std::cout << R[0][0][2]->toString() << std::endl;
+		//std::cout << dynamic_cast<BinaryOperation*>(R[0][0][2])->getLhs()->toString();
 
 	// Get the final expression
 	// Expr uses resources managed from R
@@ -636,7 +640,7 @@ MyString NDFA::getRegEx() const {
 
 	for (int i = 0; i < Q; i++) {
 		if (isFinal(i)) {
-			expr = new BinaryOperation(expr, R[initialInd][i][Q - 1], '+'); 
+			expr = new BinaryOperation(expr->clone(), R[initialInd][i][Q - 1]->clone(), '+');
 		}
 	}
 
@@ -648,6 +652,7 @@ MyString NDFA::getRegEx() const {
 			for (int k = 0; k < Q; k++) {
 
 				// Delete pointers RegEx* (created using new)
+				std::cout << "Delete: " << R[i][j][k]->toString() << "\n";
 				delete R[i][j][k]; 
 			}
 			// Delete pointers to the regular expressions deleted above 
