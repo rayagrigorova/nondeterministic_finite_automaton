@@ -575,12 +575,12 @@ MyString NDFA::getRegEx() const {
 	// Rij(k)
 	// A three dimensional array of pointers to regular expressions 
 	// Three dimensions to access i, j, k
-	RegEx**** R = new RegEx * **[Q]; 
+	RegEx**** R = new RegEx ***[Q]; 
 
 	
 	// Initialize Rij(0)
 	for (int i = 0; i < Q; i++) { // For all states 
-		R[i] = new RegEx * *[Q];
+		R[i] = new RegEx **[Q];
 
 		for (int j = 0; j < Q; j++) { // For each pair of states
 			R[i][j] = new RegEx *[Q + 1]; // 0 to Q for k 
@@ -614,7 +614,7 @@ MyString NDFA::getRegEx() const {
 				RegEx* ex3 = new BinaryOperation(ex2, R[k - 1][j][k - 1]->clone(), '.'); // Rkj(k-1)
 				RegEx* ex4 = new BinaryOperation(R[i][j][k - 1]->clone(), ex3, '+'); // Rij(k-1) + Rik(k-1) . Rkk(k-1))* . Rkj(k-1)
 
-				R[i][j][k] = ex4;
+				R[i][j][k] = ex4->clone();
 			}
 		}
 	}
@@ -632,14 +632,17 @@ MyString NDFA::getRegEx() const {
 	// Save result and delete R 
 	MyString res = expr->toString();
 
+
 	for (int i = 0; i < Q; i++) {
 		for (int j = 0; j < Q; j++) {
-			for (int k = 0; k <= Q; k++) {
+			// for (int k = 0; k <= Q; k++) {
 
-				// Delete pointers RegEx* (created using new)
-				delete R[i][j][k]; 
-			}
-			// Delete pointers to the regular expressions deleted above 
+			//	 //Delete pointers RegEx* (created using new)
+			//delete R[i][j][k]; 
+			//	
+			//}
+			
+			// Delete pointers to the regular expressions 
 			delete[] R[i][j];
 		}
 		delete[] R[i];
