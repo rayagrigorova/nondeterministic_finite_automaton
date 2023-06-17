@@ -29,16 +29,16 @@ int main() {
     //t.determinize();
     //t.print();
 
-    //NDFA t1("(a+b)");
-    //std::cout << "DETERMINIZED:\n\n";
-    //t1.determinize();
-    //t1.print();
-    NDFA t("((a.b)+a)");
-    //std::cout << "MINIMIZED:\n\n";
-    //t.minimize();
-    t.makeTotal();
-    t.print();
+    NDFA t1("(a+b)");
+    std::cout << "DETERMINIZED:\n\n";
+    t1.determinize();
+    t1.print();
+    //NDFA t("((a.b)+a)");
 
-    //std::cout << a.accept("baa");
+    //std::cout << "Determinized:\n\n";
+    //t.determinize();
+    //std::cout << t.accept("aba"); 
+
+    //std::cout << t.getRegEx(); 
 }
 

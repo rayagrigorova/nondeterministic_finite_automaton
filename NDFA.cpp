@@ -122,6 +122,84 @@ bool isDeterminisitic(const NDFA& a) {
 	return true;
 }
 
+void addToSubset(DynamicArray<DynamicArray<size_t>>& stateSubsets, size_t i, size_t currentSubset, DynamicArray<size_t>& newState, char ch, DynamicArray<State>& allStates) {
+	for (int j = 0; j < stateSubsets[currentSubset].getSize(); j++) { // for each state from the current subset 
+
+		// Get the position of the current state in the _allStates array 
+		size_t currentStateIndex = stateSubsets[currentSubset][j];
+
+		for (int k = 0; k < allStates[currentStateIndex].getNumberOfTransitions(); k++) { // For each transition of the current state 
+			// Skip transitions with other letters 
+			if (allStates[currentStateIndex][k].getFirst() != ch) {
+				continue;
+			}
+
+			// If the destination state hasn't been added to the new state yet 
+			if (!contains<size_t>(newState, allStates[currentStateIndex][k].getSecond())) {
+				newState.pushBack(allStates[currentStateIndex][k].getSecond());
+			}
+		}
+	}
+}
+
+void checkStateType(DynamicArray<DynamicArray<size_t>>& stateSubsets, DynamicArray<char>& _alphabet, DynamicArray<State>& allStates,
+	size_t& newStateIndex, DynamicArray<size_t>& _finalStates, DynamicArray<size_t>& finalStates) {
+	// Check if the null set was added - if it was, the respective state in the states array 
+// should have a transition to itself with all letters from the alphabet
+	if (stateSubsets[newStateIndex].getSize() == 0) {
+		for (int h = 0; h < _alphabet.getSize(); h++) {
+			allStates[newStateIndex].addTransition(_alphabet[h], newStateIndex);
+		}
+	}
+
+	else {
+		// Check if the new state contains final states 
+		for (int l = 0; l < _finalStates.getSize(); l++) {
+			// If the added subset contains at least one final state 
+			if (contains<size_t>(stateSubsets[newStateIndex], _finalStates[l])) {
+
+				// Add the newly added state as a final state 
+				finalStates.pushBack(newStateIndex);
+				break;
+			}
+		}
+	}
+}
+
+void searchAndAdd(DynamicArray<DynamicArray<size_t>>& stateSubsets, DynamicArray<size_t>& newState, DynamicArray<State>& allStates,
+	bool& stateAdded, size_t& newStateIndex, DynamicArray<char>& _alphabet, size_t currentSubset, size_t i,
+	DynamicArray<size_t>& finalStates, DynamicArray<size_t>& _finalStates) {
+
+	// Check if the newly created state already exists in the state subsets array 
+	int foundInd = -1;
+	for (int t = 0; t < stateSubsets.getSize(); t++) {
+		if (arraysAreEqual<size_t>(stateSubsets[t], newState)) {
+			foundInd = t;
+			break;
+		}
+	}
+
+	// If the state hasn't been added yet 
+	if (foundInd < 0) {
+		// Mark that a new state was added
+		stateAdded = true;
+		// Add to subsets array 
+		stateSubsets.pushBack(std::move(newState));
+
+		// Add to the actual array of states 
+		allStates.pushBack(State());
+		allStates[currentSubset].addTransition(_alphabet[i], newStateIndex);
+
+		checkStateType(stateSubsets, _alphabet, allStates, newStateIndex, _finalStates, finalStates);
+
+		newStateIndex++;
+	}
+
+	else {
+		allStates[currentSubset].addTransition(_alphabet[i], foundInd);
+	}
+}
+
 void NDFA::determinize() {
 	if (isDeterminisitic(*this)) {
 		return;
@@ -146,11 +224,8 @@ void NDFA::determinize() {
 	stateSubsets.pushBack(std::move(initial)); 
 
 	size_t currentSubset = 0;
-
 	size_t alphabetSize = _alphabet.getSize();
-
-	// Index the newly added states, starting from 1 
-	size_t newStateIndex = 1;
+	size_t newStateIndex = 1; // Index the newly added states, starting from 1
 
 	while (1) {
 		// If the current set is the null set, don't add any transitions 
@@ -166,71 +241,8 @@ void NDFA::determinize() {
 			// A set of states representing the combined result of all delta functions with the current letter
 			DynamicArray<size_t> newState; 
 
-			for (int j = 0; j < stateSubsets[currentSubset].getSize(); j++) { // for each state from the current subset 
-
-				// Get the position of the current state in the _allStates array 
-				size_t currentStateIndex = stateSubsets[currentSubset][j]; 
-
-				for (int k = 0; k < _allStates[currentStateIndex].getNumberOfTransitions(); k++) { // For each transition of the current state 
-					// Skip transitions with other letters 
-					if (_allStates[currentStateIndex][k].getFirst() != _alphabet[i]) {
-						continue;
-					}
-
-					// If the destination state hasn't been added to the new state yet 
-					if (!contains<size_t>(newState, _allStates[currentStateIndex][k].getSecond())) {
-						newState.pushBack(_allStates[currentStateIndex][k].getSecond());
-					}
-				}
-			}
-
-			// Check if the newly created state already exists in the state subsets array 
-			int foundInd = -1; 
-			for (int t = 0; t < stateSubsets.getSize(); t++) {
-				if (arraysAreEqual<size_t>(stateSubsets[t], newState)) {
-					foundInd = t;
-					break;
-				}
-			}
-
-			// If the state hasn't been added yet 
-			if (foundInd < 0) {
-				// Mark that a new state was added
-				stateAdded = true; 
-				// Add to subsets array 
-				stateSubsets.pushBack(std::move(newState));
-
-				// Add to the actual array of states 
-				allStates.pushBack(State()); 
-				allStates[currentSubset].addTransition(_alphabet[i], newStateIndex); 
-
-				// Check if the null set was added - if it was, the respective state in the states array 
-				// should have a transition to itself with all letters from the alphabet
-				if (stateSubsets[newStateIndex].getSize() == 0) {
-					for (int h = 0; h < alphabetSize; h++) {
-						allStates[newStateIndex].addTransition(_alphabet[h], newStateIndex);
-					}
-				}
-
-				else {
-					// Check if the new state contains final states 
-					for (int l = 0; l < _finalStates.getSize(); l++) {
-						// If the added subset contains at least one final state 
-						if (contains<size_t>(stateSubsets[newStateIndex], _finalStates[l])) {
-
-							// Add the newly added state as a final state 
-							finalStates.pushBack(newStateIndex);
-							break;
-						}
-					}
-				}
-
-				newStateIndex++;
-			}
-
-			else {
-				allStates[currentSubset].addTransition(_alphabet[i], foundInd);
-			}
+			addToSubset(stateSubsets, i, currentSubset, newState, _alphabet[i], _allStates); 
+			searchAndAdd(stateSubsets, newState, allStates, stateAdded, newStateIndex, _alphabet, currentSubset, i, finalStates, _finalStates);
 		}
 		
 		// If no new states were added 
@@ -549,19 +561,26 @@ bool NDFA::isEmptyLanguage() const {
 }
 
 // Source used: https://www.fit.vut.cz/research/project-file/589/Presentations/PB05-Converting-FAs-To-REs.pdf
-// Method used: transitive closure 
+// Method: transitive closure 
 MyString NDFA::getRegEx() const {
 	if (!isDeterminisitic(*this)) {
 		throw std::invalid_argument("For the transitive closure method to work, the automaton should be a DFA\n"); 
 	}
 
-	// I am going to use the Rijk construction 
-	DynamicArray<DynamicArray<DynamicArray<RegEx*>>> R;
-	
-	// Initialize Rij0
-	for (int i = 0; i < _allStates.getSize(); i++) { // For all states 
+	size_t Q = _allStates.getSize(); 
 
-		for (int j = 0; j < _allStates.getSize(); j++) { // For each pair of states
+	// Rij(k)
+	// A three dimensional array of pointers to regular expressions 
+	// Three dimensions to access i, j, k
+	RegEx**** R = new RegEx * **[Q]; 
+	
+	// Initialize Rij(0)
+	for (int i = 0; i < Q; i++) { // For all states 
+		R[i] = new RegEx * *[Q];
+
+		for (int j = 0; j < Q; j++) { // For each pair of states
+			R[i][j] = new RegEx *[Q];
+
 			if (i == j) {
 				R[i][j][0] = new Epsilon();
 			}
@@ -576,32 +595,52 @@ MyString NDFA::getRegEx() const {
 		
 	}
 
-	// Computation for all Rijk where i, j, k are{ 1, |Q| }
+	// Transitive closure
+	// Computation for all Rij(k) where i, j, k are { 1, |Q| }
+	for (int i = 0; i < Q; i++) { // For all states 
+		for (int j = 0; j < Q; j++) { // For each pair of states
+			for (int k = 0; k < Q; k++) {
+				// Rij(k) = Rij(k-1) + Rik(k-1) . Rkk(k-1))* . Rkj(k-1)
 
-	for (int i = 0; i < _allStates.getSize(); i++) { // For all states 
-		for (int j = 0; j < _allStates.getSize(); j++) { // For each pair of states
-			for (int k = 0; k < _allStates.getSize(); k++) {
-				// Rij(k) = Rij(k-1) + Rik(k-1) . ( Rkk(k-1))*Rkj(k-1)
-				RegEx* ex1 = new UnaryOperation(R[k][k][k - 1]->clone(), '*'); 
-				RegEx* ex2 = new BinaryOperation(ex1, R[i][k][k-1], '.');
-				RegEx* ex3 = new BinaryOperation(ex2, R[k][j][k - 1], '.');
-				RegEx* ex4 = new BinaryOperation(R[i][j][k - 1], ex3, '+');
+				
+				RegEx* ex1 = new UnaryOperation(R[k][k][k - 1]->clone(), '*'); // Rkk(k-1))*
+				RegEx* ex2 = new BinaryOperation(R[i][k][k - 1], ex1, '.'); // Rik(k-1) . Rkk(k-1))*
+				RegEx* ex3 = new BinaryOperation(ex2, R[k][j][k - 1], '.'); // Rik(k-1) . Rkk(k-1))* . Rkj(k-1)
+				RegEx* ex4 = new BinaryOperation(R[i][j][k - 1], ex3, '+'); // Rij(k-1) + Rik(k-1) . Rkk(k-1))* . Rkj(k-1)
 
 				R[i][j][k] = ex4;
 			}
 		}
 	}
 
+	// Get the final expression
 	RegEx* expr = new NullSet();
 	size_t initialInd = _initialStates[0];
-	for (int i = 0; i < _allStates.getSize(); i++) {
+
+	for (int i = 0; i < Q; i++) {
 		if (isFinal(i)) {
-			expr = new BinaryOperation(expr, R[initialInd][i][_allStates.getSize()], '+'); 
+			expr = new BinaryOperation(expr, R[initialInd][i][Q - 1], '+'); 
 		}
 	}
 
+	// Save result and delete R, expr 
 	MyString res = expr->toString();
+
 	delete expr;
+
+	for (int i = 0; i < Q; i++) {
+		for (int j = 0; j < Q; j++) {
+			for (int k = 0; k < Q; k++) {
+				// Delete pointers RegEx* (created using new)
+				delete R[i][j][k]; 
+			}
+			// Delete pointers to the regular expressions deleted above 
+			delete[] R[i][j];
+		}
+		delete[] R[i];
+	}
+	delete[] R;
+
 	return res;
 }
 
