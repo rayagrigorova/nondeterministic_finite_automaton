@@ -92,13 +92,13 @@ bool isDeterminisitic(const NDFA& a) {
 	for (int i = 0; i < a._allStates.getSize(); i++) { // for each state
 
 		// I assume that the alphabet only contains symbols a-z
-		int32_t transitionsMask = 0; // store the letters of the outgoing transitions 
+		uint32_t transitionsMask = 0; // store the letters of the outgoing transitions 
 
 
 		for (int j = 0; j < a._allStates[i].getNumberOfTransitions(); j++) { // for each transition 
 			// Create a mask for the current transition 
 			// The first bit will correspond to 'a', the second one - to 'b' and so on. 
-			int32_t currentMask = 1 << (32 - (a._allStates[i][j].getFirst() - 'a' + 1)); 
+			uint32_t currentMask = 1 << (32 - (a._allStates[i][j].getFirst() - 'a' + 1)); 
 
 			// (transitionsMask & currentMask) will return true if there exists a transition with the same letter 
 			if (transitionsMask & currentMask) {
@@ -111,9 +111,10 @@ bool isDeterminisitic(const NDFA& a) {
 
 		// Check if there are transitions with each letter from the alphabet 
 		for (int k = 0; k < a._alphabet.getSize(); k++) {
-			int32_t currentMask = 1 << (32 - (a._alphabet[k] - 'a' + 1));
+			uint32_t currentMask = 1 << (32 - (a._alphabet[k] - 'a' + 1));
 
-			if ((transitionsMask ^ currentMask)) {
+			// No transition with the current letter 
+			if (!(transitionsMask & currentMask)) {
 				return false;
 			}
 		}
@@ -597,18 +598,17 @@ MyString NDFA::getRegEx() const {
 
 	// Transitive closure
 	// Computation for all Rij(k) where i, j, k are { 1, |Q| }
-	for (int i = 0; i < Q; i++) { // For all states 
-		for (int j = 0; j < Q; j++) { // For each pair of states
-			for (int k = 0; k < Q; k++) {
+	for (int i = 1; i <= Q; i++) { // For all states 
+		for (int j = 1; j <= Q; j++) { // For each pair of states
+			for (int k = 1; k <= Q; k++) {
 				// Rij(k) = Rij(k-1) + Rik(k-1) . Rkk(k-1))* . Rkj(k-1)
 
-				
-				RegEx* ex1 = new UnaryOperation(R[k][k][k - 1]->clone(), '*'); // Rkk(k-1))*
-				RegEx* ex2 = new BinaryOperation(R[i][k][k - 1], ex1, '.'); // Rik(k-1) . Rkk(k-1))*
-				RegEx* ex3 = new BinaryOperation(ex2, R[k][j][k - 1], '.'); // Rik(k-1) . Rkk(k-1))* . Rkj(k-1)
-				RegEx* ex4 = new BinaryOperation(R[i][j][k - 1], ex3, '+'); // Rij(k-1) + Rik(k-1) . Rkk(k-1))* . Rkj(k-1)
+				RegEx* ex1 = new UnaryOperation(R[k][k][k - 1]->clone(), '*'); // (R[k,k,k-1])*
+				RegEx* ex2 = new BinaryOperation(R[i][k + 1][k], ex1, '.'); // Rik(k-1)
+				RegEx* ex3 = new BinaryOperation(ex2, R[k + 1][j][k], '.'); // Rik(k-1) . Rkk(k-1))* . Rkj(k-1)
+				RegEx* ex4 = new BinaryOperation(R[i][j][k + 1], ex3, '+'); // Rij(k-1) + Rik(k-1) . Rkk(k-1))* . Rkj(k-1)
 
-				R[i][j][k] = ex4;
+				R[i][j][k + 1] = ex4;
 			}
 		}
 	}

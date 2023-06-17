@@ -39,6 +39,6 @@ int main() {
     //t.determinize();
     //std::cout << t.accept("aba"); 
 
-    //std::cout << t.getRegEx(); 
+    std::cout << t1.getRegEx(); 
 }
 
