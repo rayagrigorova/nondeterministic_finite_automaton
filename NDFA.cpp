@@ -580,7 +580,7 @@ MyString NDFA::getRegEx() const {
 		R[i] = new RegEx * *[Q];
 
 		for (int j = 0; j < Q; j++) { // For each pair of states
-			R[i][j] = new RegEx *[Q];
+			R[i][j] = new RegEx *[Q + 1]; // 0 to Q for k 
 
 			if (i == j) {
 				R[i][j][0] = new Epsilon();
@@ -598,17 +598,17 @@ MyString NDFA::getRegEx() const {
 
 	// Transitive closure
 	// Computation for all Rij(k) where i, j, k are { 1, |Q| }
-	for (int i = 1; i <= Q; i++) { // For all states 
-		for (int j = 1; j <= Q; j++) { // For each pair of states
+	for (int i = 0; i < Q; i++) { // For all states 
+		for (int j = 0; j < Q; j++) { // For each pair of states
 			for (int k = 1; k <= Q; k++) {
 				// Rij(k) = Rij(k-1) + Rik(k-1) . Rkk(k-1))* . Rkj(k-1)
 
-				RegEx* ex1 = new UnaryOperation(R[k][k][k - 1]->clone(), '*'); // (R[k,k,k-1])*
-				RegEx* ex2 = new BinaryOperation(R[i][k + 1][k], ex1, '.'); // Rik(k-1)
-				RegEx* ex3 = new BinaryOperation(ex2, R[k + 1][j][k], '.'); // Rik(k-1) . Rkk(k-1))* . Rkj(k-1)
-				RegEx* ex4 = new BinaryOperation(R[i][j][k + 1], ex3, '+'); // Rij(k-1) + Rik(k-1) . Rkk(k-1))* . Rkj(k-1)
+				RegEx* ex1 = new UnaryOperation(R[k - 1][k - 1][k - 1]->clone(), '*'); // (R[k,k,k-1])*
+				RegEx* ex2 = new BinaryOperation(R[i][k - 1][k - 1], ex1, '.'); // Rik(k-1)
+				RegEx* ex3 = new BinaryOperation(ex2, R[k - 1][j][k - 1], '.'); // Rkj(k-1)
+				RegEx* ex4 = new BinaryOperation(R[i][j][k - 1], ex3, '+'); // Rij(k-1) + Rik(k-1) . Rkk(k-1))* . Rkj(k-1)
 
-				R[i][j][k + 1] = ex4;
+				R[i][j][k] = ex4;
 			}
 		}
 	}
