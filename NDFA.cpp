@@ -603,35 +603,32 @@ MyString NDFA::getRegEx() const {
 
 	// Transitive closure
 	// Computation for all Rij(k) where i, j, k are { 1, |Q| }
-	for (int k = 1; k < Q; k++) {
+	for (int k = 1; k <= Q; k++) {
 		for (int i = 0; i < Q; i++) { // For all states 
 			for (int j = 0; j < Q; j++) { // For each pair of states
 				// Rij(k) = Rij(k-1) + Rik(k-1) . Rkk(k-1))* . Rkj(k-1)
 
 				RegEx* ex1 = new UnaryOperation(R[k - 1][k - 1][k - 1]->clone(), '*'); // (R[k,k,k-1])*
-				RegEx* ex2 = new BinaryOperation(R[i][k - 1][k - 1]->clone(), ex1->clone(), '.'); // Rik(k-1)
-				RegEx* ex3 = new BinaryOperation(ex2->clone(), R[k - 1][j][k - 1]->clone(), '.'); // Rkj(k-1)
-				RegEx* ex4 = new BinaryOperation(R[i][j][k - 1]->clone(), ex3->clone(), '+'); // Rij(k-1) + Rik(k-1) . Rkk(k-1))* . Rkj(k-1)
+				RegEx* ex2 = new BinaryOperation(R[i][k - 1][k - 1]->clone(), ex1, '.'); // Rik(k-1)
+				RegEx* ex3 = new BinaryOperation(ex2, R[k - 1][j][k - 1]->clone(), '.'); // Rkj(k-1)
+				RegEx* ex4 = new BinaryOperation(R[i][j][k - 1]->clone(), ex3, '+'); // Rij(k-1) + Rik(k-1) . Rkk(k-1))* . Rkj(k-1)
 
 				R[i][j][k] = ex4;
 			}
 		}
 	}
 
-	//	for (int i = 0; i < Q; i++) {
-	//		for (int j = 0; j < Q; j++) {
-	//			for (int k = 0; k <= 2; k++) {
-	//			std::cout << std::setw(15);
-	//			std::cout << R[i][j][k]->toString();
+	for (int k = 0; k <= 2; k++) {
+		for (int i = 0; i < Q; i++) {
+			for (int j = 0; j < Q; j++) {
 
-	//		}
-	//		std::cout << "\n";
-	//	}
-	//}
-		//std::cout << R[0][0][0]->toString() << std::endl;
-		//std::cout << R[0][0][1]->toString() << std::endl;
-		//std::cout << R[0][0][2]->toString() << std::endl;
-		//std::cout << dynamic_cast<BinaryOperation*>(R[0][0][2])->getLhs()->toString();
+				std::cout << std::setw(15);
+				std::cout << R[i][j][k]->toString();
+
+			}
+			std::cout << "\n";
+		}
+	}
 
 	// Get the final expression
 	// Expr uses resources managed from R
@@ -649,10 +646,9 @@ MyString NDFA::getRegEx() const {
 
 	for (int i = 0; i < Q; i++) {
 		for (int j = 0; j < Q; j++) {
-			for (int k = 0; k < Q; k++) {
+			for (int k = 0; k <= Q; k++) {
 
 				// Delete pointers RegEx* (created using new)
-				std::cout << "Delete: " << R[i][j][k]->toString() << "\n";
 				delete R[i][j][k]; 
 			}
 			// Delete pointers to the regular expressions deleted above 
@@ -825,33 +821,6 @@ NDFA concatenation(const NDFA& a1, const NDFA& a2) {
 
 	return res;
 }
-
-//NDFA kleeneStar(NDFA& a) {
-//	// Add a new state
-//	a._allStates.pushBack(State());
-//	size_t indexInArr = a._allStates.getSize() - 1;
-//
-//	a._finalStates.pushBack(indexInArr);
-//
-//	// Copy all outgoing transitions of initial states for all final states 
-//	for (int i = 0; i < a._initialStates.getSize(); i++) { // for all initial states
-//		for (int j = 0; j < a._allStates[i].getNumberOfTransitions(); i++) { // for each transition
-//			for (int k = 0; k < a._finalStates.getSize(); k++) {
-//				a._allStates[indexInArr].addTransition(a._allStates[i][j].getFirst(), a._allStates[i][j].getSecond());
-//			}
-//		}
-//	}
-//
-//	// Remove all other initial states as initial states 
-//	a._initialStates.clear(); 
-//	// Add the new state as a final and initial state 
-//	a._initialStates.pushBack(indexInArr);
-//
-//	std::cout << "KLEENE STAR AUTOMATON\n\n";
-//	a.print(); 
-//	 
-//	return a; 
-//}
 
 NDFA kleeneStar(const NDFA& a) {
 	// Add a new state
