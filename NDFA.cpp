@@ -576,6 +576,7 @@ MyString NDFA::getRegEx() const {
 	// A three dimensional array of pointers to regular expressions 
 	// Three dimensions to access i, j, k
 	RegEx**** R = new RegEx * **[Q]; 
+
 	
 	// Initialize Rij(0)
 	for (int i = 0; i < Q; i++) { // For all states 
@@ -617,21 +618,8 @@ MyString NDFA::getRegEx() const {
 			}
 		}
 	}
-
-	for (int k = 0; k <= 2; k++) {
-		for (int i = 0; i < Q; i++) {
-			for (int j = 0; j < Q; j++) {
-
-				std::cout << std::setw(15);
-				std::cout << R[i][j][k]->toString();
-
-			}
-			std::cout << "\n";
-		}
-	}
-
-	// Get the final expression
-	// Expr uses resources managed from R
+	 //Get the final expression
+	 //Expr uses resources managed from R
 	RegEx* expr = new NullSet();
 	size_t initialInd = _initialStates[0];
 
