@@ -12,5 +12,10 @@ public:
 	Symbol(char ch) : _ch(ch){}
 	void print() const override { std::cout << "Character: " << _ch << std::endl; }
 
-	MyString toString() const override { return MyString(&_ch);  }
+	MyString toString() const override {
+		char arr[2];
+		arr[0] = _ch;
+		arr[1] = '\0';
+		return MyString(arr);
+	}
 };

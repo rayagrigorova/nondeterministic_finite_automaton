@@ -8,6 +8,8 @@
 #include "Epsilon.h"
 #include "NullSet.h"
 
+#include <iomanip> 
+
 namespace {
 	template <typename T>
 	bool contains(const DynamicArray<T>& arr, const T& elem) {
@@ -580,7 +582,7 @@ MyString NDFA::getRegEx() const {
 		R[i] = new RegEx * *[Q];
 
 		for (int j = 0; j < Q; j++) { // For each pair of states
-			R[i][j] = new RegEx *[Q + 1]; // 0 to Q for k 
+			R[i][j] = new RegEx *[Q]; // 0 to Q for k 
 
 			if (i == j) {
 				R[i][j][0] = new Epsilon();
@@ -590,7 +592,10 @@ MyString NDFA::getRegEx() const {
 			}
 
 			for (int t = 0; t < _allStates[i].getNumberOfTransitions(); t++) { // for all transitions of i
-				R[i][j][0] = new BinaryOperation(R[i][j][0], new Letter(_allStates[i][t].getFirst()), '+');
+				// If the current  transition is from qi to qj
+				if (_allStates[i][t].getSecond() == j) {
+					R[i][j][0] = new BinaryOperation(R[i][j][0], new Letter(_allStates[i][t].getFirst()), '+');
+				}
 			}
 		}
 		
@@ -598,9 +603,9 @@ MyString NDFA::getRegEx() const {
 
 	// Transitive closure
 	// Computation for all Rij(k) where i, j, k are { 1, |Q| }
-	for (int i = 0; i < Q; i++) { // For all states 
-		for (int j = 0; j < Q; j++) { // For each pair of states
-			for (int k = 1; k <= Q; k++) {
+	for (int k = 1; k < Q; k++) {
+		for (int i = 0; i < Q; i++) { // For all states 
+			for (int j = 0; j < Q; j++) { // For each pair of states
 				// Rij(k) = Rij(k-1) + Rik(k-1) . Rkk(k-1))* . Rkj(k-1)
 
 				RegEx* ex1 = new UnaryOperation(R[k - 1][k - 1][k - 1]->clone(), '*'); // (R[k,k,k-1])*
@@ -613,7 +618,19 @@ MyString NDFA::getRegEx() const {
 		}
 	}
 
+	for (int k = 0; k < Q; k++) {
+		for (int i = 0; i < Q; i++) {
+			for (int j = 0; j < Q; j++) {
+				std::cout << std::setw(10);
+				std::cout << R[i][j][k]->toString();
+
+			}
+			std::cout << "\n";
+		}
+	}
+
 	// Get the final expression
+	// Expr uses resources managed from R
 	RegEx* expr = new NullSet();
 	size_t initialInd = _initialStates[0];
 
@@ -623,14 +640,13 @@ MyString NDFA::getRegEx() const {
 		}
 	}
 
-	// Save result and delete R, expr 
+	// Save result and delete R 
 	MyString res = expr->toString();
-
-	delete expr;
 
 	for (int i = 0; i < Q; i++) {
 		for (int j = 0; j < Q; j++) {
 			for (int k = 0; k < Q; k++) {
+
 				// Delete pointers RegEx* (created using new)
 				delete R[i][j][k]; 
 			}

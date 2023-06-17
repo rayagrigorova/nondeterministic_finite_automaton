@@ -51,5 +51,5 @@ const RegEx* BinaryOperation::getLhs() const {
 }
 
 MyString BinaryOperation::toString() const{
-	return _lhs->toString() + " " + _rhs->toString() + " " + &_op; 
+	return _lhs->toString() + " " + &_op + " " + _rhs->toString();
 }
