@@ -18,8 +18,6 @@ int main() {
     //    (a+b)
     //    ((a.b)+a)
 
-    // ((((a.b)*).b)*)+b
-
     Program::getInstance().run();
 }
 
