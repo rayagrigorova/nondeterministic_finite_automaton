@@ -12,13 +12,6 @@ public:
 		char buff[250];
 		std::cin >> buff;
 
-		std::ofstream file(buff, std::ios::binary);
-
-		if (!file.is_open()) {
-			throw std::logic_error("Error opening file\n");
-		}
-
-		//_a->saveToBinaryFile(file);
-
+		_a->saveToFile(buff); 
 	}
 };

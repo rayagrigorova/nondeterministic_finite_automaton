@@ -12,15 +12,9 @@ public:
 		char buff[250];
 		std::cin >> buff;
 
-		std::ifstream file(buff, std::ios::binary);
-
-		if (!file.is_open()) {
-			throw std::logic_error("Error opening file\n");
-		}
-
-		//NDFA res;
-		//res.readFromBinaryFile(file);
-		//_arr->pushBack(std::move(res));
+		NDFA a;
+		a.loadFromFile(buff);
+		_arr->pushBack(std::move(a));
 
 	}
 };
