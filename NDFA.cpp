@@ -124,7 +124,7 @@ bool isDeterminisitic(const NDFA& a) {
 
 	return true;
 }
-
+//(stateSubsets, i, currentSubset, newState, _alphabet[i], _allStates)
 void addToSubset(DynamicArray<DynamicArray<size_t>>& stateSubsets, size_t i, size_t currentSubset, DynamicArray<size_t>& newState, char ch, DynamicArray<State>& allStates) {
 	for (int j = 0; j < stateSubsets[currentSubset].getSize(); j++) { // for each state from the current subset 
 
@@ -137,7 +137,7 @@ void addToSubset(DynamicArray<DynamicArray<size_t>>& stateSubsets, size_t i, siz
 				continue;
 			}
 
-			// If the destination state hasn't been added to the new state yet 
+			// If the destination state hasn't been added to the new set of states yet 
 			if (!contains<size_t>(newState, allStates[currentStateIndex][k].getSecond())) {
 				newState.pushBack(allStates[currentStateIndex][k].getSecond());
 			}
@@ -230,7 +230,7 @@ void NDFA::determinize() {
 	size_t alphabetSize = _alphabet.getSize();
 	size_t newStateIndex = 1; // Index the newly added states, starting from 1
 
-	while (1) {
+	while (currentSubset < stateSubsets.getSize()) {
 		// If the current set is the null set, don't add any transitions 
 		if (stateSubsets[currentSubset].getSize() == 0) {
 			currentSubset++;

@@ -9,4 +9,8 @@ protected:
 
 public:
 	SingleCommand(NDFA* a) : _a(a){}
+
+	~SingleCommand() {
+		_a = nullptr;
+	}
 };

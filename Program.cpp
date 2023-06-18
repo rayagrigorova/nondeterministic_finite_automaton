@@ -13,5 +13,7 @@ void Program::run() {
 	while (1) {
 		Command* toExecute = commandFactory(_arr);
 		toExecute->execute(std::cout);
+
+		//delete toExecute;
 	}
 }

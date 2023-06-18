@@ -11,4 +11,8 @@ protected:
 public:
 	AddCommand(DynamicArray<NDFA>* arr) : _arr(arr){}
 
+	~AddCommand() {
+		_arr = nullptr;
+	}
+
 };

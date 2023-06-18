@@ -66,7 +66,7 @@ Command* commandFactory(DynamicArray<NDFA>& arr) {
 		case 't': return new TotalizeCommand(&arr[i]);
 		case 'a': return new AcceptWord(&arr[i]);
 		case 'e': return new EmptyCheck(&arr[i]);
-		case 'k': return new KleeneStarCommand(&arr[i], arr);
+		case 'k': return new KleeneStarCommand(&arr[i], &arr);
 		case 'x': return new ToRegex(&arr[i]); 
 		}
 
@@ -77,14 +77,14 @@ Command* commandFactory(DynamicArray<NDFA>& arr) {
 		std::cin >> i1 >> i2;
 
 		switch (ch) {
-		case 'u': return new UnionCommand(&arr[i1], &arr[i2], arr);
-		case 'c': return new ConcatenationCommand(&arr[i1], &arr[i2], arr);
+		case 'u': return new UnionCommand(&arr[i1], &arr[i2], &arr);
+		case 'c': return new ConcatenationCommand(&arr[i1], &arr[i2], &arr);
 		}
 	}
 
 	// get automaton from regex
 	else if (ch == 'h') {
-		return new ToAutomaton(arr);
+		return new ToAutomaton(&arr);
 	}
 
 	// Invalid command

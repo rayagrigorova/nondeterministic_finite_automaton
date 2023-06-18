@@ -5,7 +5,7 @@
 
 class KleeneStarCommand : public SingleCommand, AddCommand {
 public:
-	KleeneStarCommand(NDFA* a, DynamicArray<NDFA>& arr) : SingleCommand(a), AddCommand(arr) {}
+	KleeneStarCommand(NDFA* a, DynamicArray<NDFA>* arr) : SingleCommand(a), AddCommand(arr) {}
 
 	void execute(std::ostream& os) override {
 		_arr->pushBack(kleeneStar(*_a));
