@@ -6,7 +6,7 @@ Epsilon::Epsilon() : Symbol(EPSILON) {
 }
 
 NDFA Epsilon::buildAutomatonForLanguage() const {
-	// An automaton for epsilon is a single state which is final and initial 
+	// An automaton for epsilon is a single state which is final and initial (no transitions)
 
 	DynamicArray<size_t> initial, final;
 	DynamicArray<State> all;

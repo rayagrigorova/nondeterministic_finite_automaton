@@ -2,6 +2,7 @@
 
 #include "SingleCommand.h"
 
+// Check if the language of a given automaton is empty 
 class EmptyCheck : public SingleCommand {
 public:
 	EmptyCheck(NDFA* a) : SingleCommand(a) {}

@@ -3,7 +3,8 @@
 #include <iostream>
 #include <fstream>
 
-template<typename T> class DynamicArray;  // pre-declare the template class itself
+// Necessary because template friends cause linker errors otherwise
+template<typename T> class DynamicArray;  
 template<typename T> std::ostream& operator<<(std::ostream& os, const DynamicArray<T>& a);
 template<typename T> std::istream& operator>>(std::istream& is, DynamicArray<T>& a); 
 
@@ -267,13 +268,13 @@ std::ostream& operator<<(std::ostream& os, const DynamicArray<T>& a){
 
 template <typename T>
 std::istream& operator>>(std::istream& is, DynamicArray<T>& a){
-	a.clear();
+	a.clear(); // Remove the old contents of the array
 
 	size_t newSize;
 	is >> newSize;
 
 	for (int i = 0; i < newSize; i++) {
-		is.get();
+		is.get(); // skip space
 
 		T obj;
 		is >> obj; 
@@ -281,7 +282,7 @@ std::istream& operator>>(std::istream& is, DynamicArray<T>& a){
 		a.pushBack(std::move(obj));
 	}
 
-	is.get();
+	is.get(); // skip the new line symbol
 	return is;
 }
 

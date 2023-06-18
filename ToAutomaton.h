@@ -6,6 +6,7 @@ const char* SYNTAX_RULE_1 = "1. Each operation should be surrounded by brackets\
 const char* SYNTAX_RULE_2 = "2. The Kleene star operation requires brackets both around the original expression and the Kleene star expression\nExample: ((a)*)\n";
 const char* SYNTAX_RULE_3 = "3. The whole regex should be surrounded by brackets\nExample: (a.b)+(b.a) -> ((a.b)+(b.a))\n"; 
 
+// Create an automaton from a regex and add it to an array 
 class ToAutomaton : public AddCommand {
 public:
 	ToAutomaton(DynamicArray<NDFA>* arr) : AddCommand(arr) {}

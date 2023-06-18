@@ -11,10 +11,12 @@ NDFA BinaryOperation::buildAutomatonForLanguage() const {
 		NDFA res = Union(_lhs->buildAutomatonForLanguage(), _rhs->buildAutomatonForLanguage());
 		return res; 
 	}
+
 	else if(_op == '.'){
 		NDFA res = concatenation(_lhs->buildAutomatonForLanguage(), _rhs->buildAutomatonForLanguage());
 		return res;
 	}
+
 	else {
 		throw std::invalid_argument("Error\n");
 	}
@@ -32,8 +34,8 @@ BinaryOperation::~BinaryOperation() {
 }
 
 void BinaryOperation::print() const {
-	std::cout << "Operation: " << _op << std::endl;
 	_rhs->print();
+	std::cout << ' ' << _op << ' ';
 	_lhs->print();
 }
 

@@ -11,6 +11,8 @@
 #include <iomanip> 
 
 namespace {
+	// Check if a dynamic array contains a given element 
+	// T should have an operator == 
 	template <typename T>
 	bool contains(const DynamicArray<T>& arr, const T& elem) {
 		for (int i = 0; i < arr.getSize(); i++) {
@@ -21,9 +23,9 @@ namespace {
 		return false;
 	}
 
-	template<typename T>
 	// A function to compare the contents of two dynamic arrays 
-	// The type used should have an operator != 
+	// The type T should have an operator == 
+	template<typename T>
 	bool arraysAreEqual(const DynamicArray<T>& arr1, const DynamicArray<T>& arr2) {
 		size_t size = arr1.getSize();
 		if (size != arr2.getSize()) {

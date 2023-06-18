@@ -3,8 +3,10 @@
 #include "Command.h"
 
 // A command that works on two automata
+// Virtual inheritance to avoid the diamond problem
 class DoubleCommand : public virtual Command {
 protected:
+	// Non-owning pointers 
 	NDFA* _a1;
 	NDFA* _a2;
 

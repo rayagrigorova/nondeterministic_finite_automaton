@@ -7,5 +7,6 @@
 class Command {
 public:
 	~Command() = default;
+
 	virtual void execute(std::istream& is, std::ostream& os) = 0;
 };

@@ -2,6 +2,7 @@
 
 #include "SingleCommand.h"
 
+// Convert an automaton to a regular expression 
 class ToRegex : public SingleCommand {
 public:
 	ToRegex(NDFA* a) : SingleCommand(a){}

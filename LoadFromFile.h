@@ -2,6 +2,7 @@
 
 #include "SingleCommand.h"
 
+// Load an automaton from a file and add it to an array 
 class LoadFromFile : public AddCommand {
 public:
 	LoadFromFile(DynamicArray<NDFA>* arr) : AddCommand(arr) {}
@@ -13,8 +14,7 @@ public:
 		std::cin >> buff;
 
 		NDFA a;
-
-		a.loadFromFile(buff); // This line could throw an exception
+		a.loadFromFile(buff); // This line could throw an exception (handled in Program)
 
 		_arr->pushBack(std::move(a));
 

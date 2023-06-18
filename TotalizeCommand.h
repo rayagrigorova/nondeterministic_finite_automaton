@@ -2,6 +2,7 @@
 
 #include "SingleCommand.h"
 
+// Make a given automaton total 
 class TotalizeCommand : public SingleCommand {
 public:
 	TotalizeCommand(NDFA* a) : SingleCommand(a) {}
@@ -11,6 +12,6 @@ public:
 
 		os << "Total automaton:" << "\n\n";
 		_a->print(os);
-		os << std::endl;
+		os << '\n';
 	}
 };

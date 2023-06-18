@@ -3,6 +3,7 @@
 #include "SingleCommand.h"
 #include "AddCommand.h"
 
+// Create a Kleene star automaton and add it to an array
 class KleeneStarCommand : public SingleCommand, AddCommand {
 public:
 	KleeneStarCommand(NDFA* a, DynamicArray<NDFA>* arr) : SingleCommand(a), AddCommand(arr) {}
@@ -12,6 +13,6 @@ public:
 
 		os << "Kleene star automaton:\n\n";
 		_arr->operator[](_arr->getSize() - 1).print(os);
-		os << std::endl;
+		os << '\n';
 	}
 };

@@ -2,7 +2,8 @@
 
 #include <fstream>
 
-template<typename T, typename S> class Pair;  // pre-declare the template class itself
+// Necessary because template friends cause linker errors otherwise
+template<typename T, typename S> class Pair;
 template<typename T, typename S> std::ostream& operator<<(std::ostream& os, const Pair<T, S>& p);
 template<typename T, typename S> std::istream& operator>>(std::istream& is, Pair<T, S>& p);
 

@@ -14,10 +14,11 @@ class NDFA {
 
 	DynamicArray<char> _alphabet; 
 
+	// A private function to check if a word is in the language of a given state 
 	bool accept(const StringView& word, int currentState) const; 
 
-	bool isReachable(size_t stateInd) const;
-	bool isReachable(size_t fromInd, size_t destInd) const; // check if a state is reachable through some initial state
+	bool isReachable(size_t stateInd) const; // Check if a given state is reachable 
+	bool isReachable(size_t fromInd, size_t destInd) const; // Check if a state is reachable from some start state
 
 	void setAlphabet();
 
@@ -25,6 +26,7 @@ class NDFA {
 	bool isFinal(size_t ind) const;
 	bool isInitial(size_t ind) const;
 
+	// Used in the minimization algorithm
 	void removeUnreachableStates();
 
 public:
@@ -52,12 +54,13 @@ public:
 	friend NDFA kleeneStar(const NDFA& a);
 
 	MyString getRegEx() const; 
-
 	friend NDFA getAutomatonForRegEx(MyString regEx); 
 
 	void print(std::ostream& os) const; 
 
 	friend bool isDeterminisitic(const NDFA& a); 
+
+	// Using equivalence classes (which are represented by sets of numbers corresponding to states), generate a minimal NDFA 
 	friend NDFA generateMinimalAutomaton(const DynamicArray<DynamicArray<size_t>>& newStates, size_t numberOfStates, const NDFA& originalAutomaton); 
 
 	void saveToFile(const char* filename) const;

@@ -14,17 +14,6 @@
 #include "SaveToFile.h"
 #include "LoadFromFile.h"
 
-//'d' - determinize
-//'m' - minimize
-//'t' - make total
-//'a' - accept word
-//'e' - empty language";
-//'u' - union
-//'c' - concatenation
-//'k' - Kleene star
-//'h' - get automaton from regex
-//'x' - get regex from automaton
-
 const char* SINGLE_INDEX = "dmtaekxs\0"; // Commands that require entering an index of an automaton 
 const char* DOUBLE_INDEX = "uc\0"; // Commands that require entering two indices 
 
@@ -95,7 +84,7 @@ Command* commandFactory(DynamicArray<NDFA>& arr) {
 		}
 	}
 
-	// get automaton from regex
+	// Get automaton from regex
 	else if (ch == 'h') {
 		return new ToAutomaton(&arr);
 	}

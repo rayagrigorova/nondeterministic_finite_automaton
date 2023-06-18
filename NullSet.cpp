@@ -6,7 +6,7 @@ NullSet::NullSet() : Symbol(NULL_SET){
 }
 
 NDFA NullSet::buildAutomatonForLanguage() const{
-	// An automaton for the null set is a single state which is initial 
+	// An automaton for the null set is a single state which is initial (no final states or transitions)
 
 	DynamicArray<size_t> initial, final;
 	DynamicArray<State> all;

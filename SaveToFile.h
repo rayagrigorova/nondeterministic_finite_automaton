@@ -2,6 +2,7 @@
 
 #include "SingleCommand.h"
 
+// Save a given automaton to a file 
 class SaveToFile : public SingleCommand {
 public:
 	SaveToFile(NDFA* a) : SingleCommand(a){}
@@ -12,7 +13,7 @@ public:
 		char buff[250];
 		is >> buff;
 
-		_a->saveToFile(buff); // This line could throw an exception
+		_a->saveToFile(buff); // This line could throw an exception (handled in Program)
 		
 		os << "\nFile saved successfully\n\n"; 
 	}

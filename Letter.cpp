@@ -14,7 +14,7 @@ NDFA Letter::buildAutomatonForLanguage() const {
 
 	State s1, s2;
 
-	// add a transition to s2 
+	// add a transition to the second state 
 	s1.addTransition(_ch, 1);
 
 	initial.pushBack(0);

@@ -3,9 +3,10 @@
 #include "NDFA.h"
 
 class RegEx {
-	// Each regex knows how to construct an automaton for itself 
 public:
+	// Each regex knows how to construct an automaton for itself 
 	virtual NDFA buildAutomatonForLanguage() const = 0;
+
 	virtual ~RegEx() = default; 
 	virtual RegEx* clone() const = 0;
 

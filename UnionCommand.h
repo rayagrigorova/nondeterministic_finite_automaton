@@ -3,6 +3,7 @@
 #include "DoubleCommand.h"
 #include "AddCommand.h"
 
+// Create a union automaton and add it to an array 
 class UnionCommand : public DoubleCommand, AddCommand {
 public:
 	UnionCommand(NDFA* a1, NDFA* a2, DynamicArray<NDFA>* arr) : DoubleCommand(a1, a2), AddCommand(arr){}
@@ -12,7 +13,7 @@ public:
 
 		os << "Union automaton:" << "\n\n";
 		_arr->operator[](_arr->getSize() - 1).print(os);
-		os << std::endl;
+		os << '\n';
 	}
 };
 

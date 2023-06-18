@@ -2,6 +2,7 @@
 
 #include "SingleCommand.h"
 
+// Minimize a given automaton 
 class MinimizeCommand : public SingleCommand {
 public:
 	MinimizeCommand(NDFA* a) : SingleCommand(a) {}
