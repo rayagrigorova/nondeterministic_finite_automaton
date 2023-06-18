@@ -822,7 +822,7 @@ NDFA kleeneStar(const NDFA& a) {
 
 NDFA getAutomatonForRegEx(MyString regEx){
 	RegExCalculator calc(regEx);
-	return calc.buildAutomaton(); 
+	return calc.buildAutomaton();
 }
 
 // This function will only be used to call the overload isReachable(fromInd, stateInd) for all start states 
