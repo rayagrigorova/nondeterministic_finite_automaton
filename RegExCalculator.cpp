@@ -60,7 +60,7 @@ RegExCalculator::RegExCalculator(const MyString& str) {
 }
 
 NDFA RegExCalculator::buildAutomaton() {
-	return _expr->buildAutomatonForLanguage(); 
+	return _expr->buildAutomatonForLanguage();
 }
 
 const RegEx* RegExCalculator::getRegEx() const {
@@ -82,7 +82,6 @@ RegEx* RegExCalculator::parseExpr(const StringView& str) {
 	}
 
 	StringView withoutBrackets = str.substr(1, str.length() - 2);
-	std::cout << withoutBrackets << std::endl;
 
 	int count = 0;
 
@@ -96,14 +95,12 @@ RegEx* RegExCalculator::parseExpr(const StringView& str) {
 
 		else if (count == 0 && isOperation(withoutBrackets[i])) {
 			if (withoutBrackets[i] == KLEENE_STAR) {
-				RegEx* uo = new UnaryOperation(parseExpr(withoutBrackets.substr(1, withoutBrackets.length() - 3)), KLEENE_STAR);
-
-				return uo; 
+				return new UnaryOperation(parseExpr(withoutBrackets.substr(1, withoutBrackets.length() - 3)), KLEENE_STAR);
 			}
 			else {
-				RegEx* bo = new BinaryOperation(parseExpr(withoutBrackets.substr(0, i)), parseExpr(withoutBrackets.substr(i + 1, withoutBrackets.length() - i - 1)), withoutBrackets[i]);
-				return bo; 
+				return new BinaryOperation(parseExpr(withoutBrackets.substr(0, i)), parseExpr(withoutBrackets.substr(i + 1, withoutBrackets.length() - i - 1)), withoutBrackets[i]);
 			}
 		}
 	}
+	throw std::invalid_argument("Invalid regex\n"); 
 }

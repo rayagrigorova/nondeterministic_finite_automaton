@@ -11,6 +11,9 @@
 #include "ToAutomaton.h"
 #include "ToRegex.h"
 
+#include "SaveToFile.h"
+#include "LoadFromFile.h"
+
 //'d' - determinize
 //'m' - minimize
 //'t' - make total
@@ -22,7 +25,7 @@
 //'h' - get automaton from regex
 //'x' - get regex from automaton
 
-const char* SINGLE_INDEX = "dmtaekx\0"; // Commands that require entering an index of an automaton 
+const char* SINGLE_INDEX = "dmtaekxs\0"; // Commands that require entering an index of an automaton 
 const char* DOUBLE_INDEX = "uc\0"; // Commands that require entering two indices 
 
 namespace {
@@ -46,12 +49,19 @@ Command* commandFactory(DynamicArray<NDFA>& arr) {
 	std::cout << "\'a\' - accept word\n";
 	std::cout << "\'e\' - empty language\n";
 
+	std::cout << "\n";
+
 	std::cout << "\'u\' - union\n";
 	std::cout << "\'c\' - concatenation\n";
 	std::cout << "\'k\' - Kleene star\n";
 
 	std::cout << "\'h\' - get automaton from regex\n";
 	std::cout << "\'x\' - get regex from automaton\n";
+
+	std::cout << "\n";
+
+	std::cout << "\'s\' - save automaton to file\n";
+	std::cout << "\'l\' - load automaton from file\n";
 
 	std::cin >> ch;
 
@@ -69,6 +79,7 @@ Command* commandFactory(DynamicArray<NDFA>& arr) {
 		case 'e': return new EmptyCheck(&arr[i]);
 		case 'k': return new KleeneStarCommand(&arr[i], &arr);
 		case 'x': return new ToRegex(&arr[i]); 
+		case 's': return new SaveToFile(&arr[i]);
 		}
 
 	}
@@ -87,6 +98,11 @@ Command* commandFactory(DynamicArray<NDFA>& arr) {
 	// get automaton from regex
 	else if (ch == 'h') {
 		return new ToAutomaton(&arr);
+	}
+
+	// Load from file and push to the array of automata 
+	else if (ch == 'l') {
+		return new LoadFromFile(&arr);
 	}
 
 	// Invalid command

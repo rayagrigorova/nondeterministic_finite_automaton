@@ -1,4 +1,5 @@
 #include "State.h"
+#include <fstream>
 
 void State::addTransition(char ch, int state) {
 	_arr.pushBack(Pair<char, int>(ch, state));
@@ -38,4 +39,12 @@ int State::getDestinationState(char ch) const {
 		}
 	}
 	return -1;
+}
+
+std::ostream& operator<<(std::ostream& os, const State& s) {
+	return os << s._arr;
+}
+
+std::istream& operator>>(std::istream& is, State& s) {
+	return is >> s._arr;
 }

@@ -10,6 +10,9 @@ NDFA UnaryOperation::buildAutomatonForLanguage() const {
 		NDFA res = kleeneStar(_expr->buildAutomatonForLanguage()); 
 		return res;
 	}
+	else {
+		throw std::invalid_argument("Error\n"); 
+	}
 }
 
 RegEx* UnaryOperation::clone() const {

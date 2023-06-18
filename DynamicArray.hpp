@@ -1,6 +1,11 @@
 #pragma once
 
 #include <iostream>
+#include <fstream>
+
+template<typename T> class DynamicArray;  // pre-declare the template class itself
+template<typename T> std::ostream& operator<<(std::ostream& os, const DynamicArray<T>& a);
+template<typename T> std::istream& operator>>(std::istream& is, DynamicArray<T>& a); 
 
 // Source: https://github.com/Angeld55/Object-oriented_programming_FMI/tree/master/Week%2009/DynamicArrayOfA%20(with%20move)
 
@@ -42,7 +47,9 @@ public:
 	void erase(size_t pos);
 	void clear(); // erase all elements from the vector and leave it with a size of 0 
 
-	size_t getCapacity() const;
+	friend std::ostream& operator<< <>(std::ostream& os, const DynamicArray<T>& a);
+	friend std::istream& operator>> <>(std::istream& is, DynamicArray<T>& a);
+
 };
 
 template <typename T>
@@ -247,6 +254,34 @@ void DynamicArray<T>::clear() {
 }
 
 template <typename T>
-size_t DynamicArray<T>::getCapacity() const {
-	return capacity;
+std::ostream& operator<<(std::ostream& os, const DynamicArray<T>& a){
+	os << a.size;
+
+	for (int i = 0; i < a.size; i++) {
+		os << ' ' << a.arr[i];
+	}
+
+	os << '\n';
+	return os;
 }
+
+template <typename T>
+std::istream& operator>>(std::istream& is, DynamicArray<T>& a){
+	a.clear();
+
+	size_t newSize;
+	is >> newSize;
+
+	for (int i = 0; i < newSize; i++) {
+		is.get();
+
+		T obj;
+		is >> obj; 
+		 
+		a.pushBack(std::move(obj));
+	}
+
+	is.get();
+	return is;
+}
+

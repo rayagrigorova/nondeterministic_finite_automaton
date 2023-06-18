@@ -19,6 +19,5 @@ int main() {
     //    ((a.b)+a)
 
     Program::getInstance().run();
-   
 }
 

@@ -2,6 +2,7 @@
 
 #include "State.h"
 #include "DynamicArray.hpp"
+
 #include "MyString.h"
 #include "StringView.h"
 
@@ -58,6 +59,10 @@ public:
 
 	friend bool isDeterminisitic(const NDFA& a); 
 	friend NDFA generateMinimalAutomaton(const DynamicArray<DynamicArray<size_t>>& newStates, size_t numberOfStates, const NDFA& originalAutomaton); 
+
+	void saveToFile(const char* filename) const;
+	void loadFromFile(const char* filename);
+
 };
 
 NDFA Union(const NDFA& a1, const NDFA& a2);

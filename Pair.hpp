@@ -1,5 +1,11 @@
 #pragma once
 
+#include <fstream>
+
+template<typename T, typename S> class Pair;  // pre-declare the template class itself
+template<typename T, typename S> std::ostream& operator<<(std::ostream& os, const Pair<T, S>& p);
+template<typename T, typename S> std::istream& operator>>(std::istream& is, Pair<T, S>& p);
+
 template <typename T, typename S>
 class Pair {
 	T _first;
@@ -14,6 +20,9 @@ public:
 
 	const T& getFirst() const;
 	const S& getSecond() const;
+
+	friend std::ostream& operator<< <>(std::ostream& os, const Pair<T, S>& p);
+	friend std::istream& operator>> <>(std::istream& is, Pair<T, S>& p);
 };
 
 template <typename T, typename S>
@@ -40,3 +49,26 @@ template <typename T, typename S>
 const S& Pair<T, S>::getSecond() const {
 	return _second;
 }
+
+template <typename T, typename S>
+std::ostream& operator<<(std::ostream& os, const Pair<T, S>& p){
+	return os << ' ' << p.getFirst() << ' ' << p.getSecond();
+}
+
+template <typename T, typename S>
+std::istream& operator>>(std::istream& is, Pair<T, S>& p) {
+	is.get();
+
+	T obj;
+	is >> obj; 
+	p.setFirst(obj);
+
+	is.get();
+
+	S obj2;
+	is >> obj2;
+	p.setSecond(obj2);
+
+	return is;
+};
+

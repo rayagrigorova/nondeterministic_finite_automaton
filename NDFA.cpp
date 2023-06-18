@@ -195,7 +195,7 @@ void searchAndAdd(DynamicArray<DynamicArray<size_t>>& stateSubsets, DynamicArray
 
 void NDFA::determinize() {
 	if (isDeterminisitic(*this)) {
-		throw std::invalid_argument("The automaton is deterministic\n");
+		return;
 	}
 
 	// The arrays to be used to create the new automaton 
@@ -357,13 +357,8 @@ NDFA generateMinimalAutomaton(const DynamicArray<DynamicArray<size_t>>& newState
 // Source used: https://store.fmi.uni-sofia.bg/fmi/logic/static/eai/eai.pdf
 void NDFA::minimize() {
 	removeUnreachableStates();
-	try {
-		determinize();
-	}
-	catch (std::exception& e) {
-
-	}
-
+	determinize();
+	
 	size_t numberOfStates = _allStates.getSize();
 
 	// Create a two dimensional bool array (an array of pointers)
@@ -961,6 +956,37 @@ void NDFA::removeUnreachableStates() {
 		}
 	}
 }
+
+void NDFA::saveToFile(const char* filename) const {
+	std::ofstream file(filename, std::ios::app);
+
+	file << _finalStates;
+	file << _initialStates;
+	file << _allStates;
+	file << _alphabet;
+
+	if (!file.is_open()) {
+		return;
+	}
+
+	file.close();
+}
+
+void NDFA::loadFromFile(const char* filename){
+	std::ifstream file(filename, std::ios::app);
+
+	file >> _finalStates;
+	file >> _initialStates;
+	file >> _allStates;
+	file >> _alphabet;
+
+	if (!file.is_open()) {
+		return;
+	}
+
+	file.close();
+}
+
 
 
 

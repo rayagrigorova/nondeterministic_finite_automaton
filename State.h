@@ -26,4 +26,8 @@ public:
 
 	// I want to be able to delete and add transitions 
 	friend class NDFA;
+
+	friend std::ostream& operator<<(std::ostream& os, const State& s);
+	friend std::istream& operator>>(std::istream& is, State& s);
+
 };
