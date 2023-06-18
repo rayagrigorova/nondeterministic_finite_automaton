@@ -24,9 +24,6 @@ NDFA Letter::buildAutomatonForLanguage() const {
 
 	NDFA res(std::move(final), std::move(initial), std::move(all));
 
-	std::cout << "LETTER AUTOMATON: \n";
-	res.print(); 
-
 	return res; 
 }
 

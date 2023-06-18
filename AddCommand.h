@@ -6,9 +6,9 @@
 // A command that adds something to an array 
 class AddCommand : public virtual Command {
 protected:
-	DynamicArray<NDFA>& _arr;
+	DynamicArray<NDFA>* _arr;
 
 public:
-	AddCommand(DynamicArray<NDFA>& arr) : _arr(arr){}
+	AddCommand(DynamicArray<NDFA>* arr) : _arr(arr){}
 
 };

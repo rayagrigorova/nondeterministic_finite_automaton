@@ -11,7 +11,7 @@ public:
 	Program(const Program& other) = delete;
 	Program& operator=(const Program& other) = delete;
 
-	Program& getInstance() const;
+	static Program& getInstance();
 
 	void run();
 };

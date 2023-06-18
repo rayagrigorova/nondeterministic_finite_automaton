@@ -3,6 +3,7 @@
 #include <iostream>
 #include "NDFA.h"
 
+// Base class for all commands 
 class Command {
 public:
 	~Command() = default;

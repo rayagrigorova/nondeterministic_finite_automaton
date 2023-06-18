@@ -8,5 +8,9 @@ public:
 
 	void execute(std::ostream& os) override {
 		_a->determinize();
+
+		std::cout << "Determinized automaton:\n";
+		_a->print();
+		std::cout << std::endl;
 	}
 };

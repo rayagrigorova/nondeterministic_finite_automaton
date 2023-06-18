@@ -8,5 +8,9 @@ public:
 
 	void execute(std::ostream& os) override {
 		_a->makeTotal();
+
+		std::cout << "Total automaton:" << std::endl;
+		_a->print();
+		std::cout << std::endl;
 	}
 };

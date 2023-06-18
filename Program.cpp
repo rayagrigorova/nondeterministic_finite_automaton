@@ -3,7 +3,8 @@
 #include "Command.h"
 #include "CommandFactory.h"
 
-Program& Program::getInstance() const {
+// Program is a singleton class 
+Program& Program::getInstance(){
 	static Program p;
 	return p;
 }

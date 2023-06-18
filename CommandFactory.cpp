@@ -11,8 +11,19 @@
 #include "ToAutomaton.h"
 #include "ToRegex.h"
 
-const char* SINGLE_INDEX = "dmtaekx";
-const char* DOUBLE_INDEX = "uc";
+//'d' - determinize
+//'m' - minimize
+//'t' - make total
+//'a' - accept word
+//'e' - empty language";
+//'u' - union
+//'c' - concatenation
+//'k' - Kleene star
+//'h' - get automaton from regex
+//'x' - get regex from automaton
+
+const char* SINGLE_INDEX = "dmtaekx\0"; // Commands that require entering an index of an automaton 
+const char* DOUBLE_INDEX = "uc\0"; // Commands that require entering two indices 
 
 namespace {
 	bool foundInStr(const char* str, char ch) {
@@ -33,7 +44,7 @@ Command* commandFactory(DynamicArray<NDFA>& arr) {
 	std::cout << "\'m\' - minimize\n";
 	std::cout << "\'t\' - make total\n";
 	std::cout << "\'a\' - accept word\n";
-	std::cout << "\'e\' - empty language";
+	std::cout << "\'e\' - empty language\n";
 
 	std::cout << "\'u\' - union\n";
 	std::cout << "\'c\' - concatenation\n";
@@ -45,7 +56,7 @@ Command* commandFactory(DynamicArray<NDFA>& arr) {
 	std::cin >> ch;
 
 	if (foundInStr(SINGLE_INDEX, ch)) {
-		std::cout << "Enter an automaton index:\n";
+		std::cout << "Enter an automaton index:" << std::endl;
 		int i;
 		std::cin >> i;
 
@@ -61,7 +72,7 @@ Command* commandFactory(DynamicArray<NDFA>& arr) {
 
 	}
 	else if (foundInStr(DOUBLE_INDEX, ch)) {
-		std::cout << "Enter wto automaton indices:\n";
+		std::cout << "Enter two indices:\n";
 		int i1, i2;
 		std::cin >> i1 >> i2;
 
@@ -76,6 +87,7 @@ Command* commandFactory(DynamicArray<NDFA>& arr) {
 		return new ToAutomaton(arr);
 	}
 
+	// Invalid command
 	else {
 		throw std::invalid_argument("Invalid command!\n");
 	}

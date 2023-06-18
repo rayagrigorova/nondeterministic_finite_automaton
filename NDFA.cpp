@@ -367,16 +367,7 @@ NDFA generateMinimalAutomaton(const DynamicArray<DynamicArray<size_t>>& newState
 // Source used: https://store.fmi.uni-sofia.bg/fmi/logic/static/eai/eai.pdf
 void NDFA::minimize() {
 	removeUnreachableStates();
-
-	std::cout << "No unreachable:";
-	this->print();
-	std::cout << "\n\n\n"; 
-
 	determinize();
-
-	std::cout << "Deterministic:";
-	this->print();
-	std::cout << "\n\n\n";
 
 	size_t numberOfStates = _allStates.getSize();
 
@@ -415,9 +406,6 @@ void NDFA::minimize() {
 						int deltaOne = _allStates[i].getDestinationState(_alphabet[k]);
 						int deltaTwo = _allStates[j].getDestinationState(_alphabet[k]);
 
-						std::cout << "DELTA ONE:\n" << deltaOne << std::endl;
-						std::cout << "DELTA TWO:\n" << deltaOne << std::endl;
-
 						// If arr[deltaOne][deltaTwo] is marked 
 						if (!arr[deltaOne][deltaTwo]) {
 							// Mark the current pair of states 
@@ -431,26 +419,11 @@ void NDFA::minimize() {
 		
 	} while (!ready);
 
-	std::cout << "ARR:\n\n";
-	for (int i = 0; i < numberOfStates; i++) {
-		for (int j = 0; j < numberOfStates; j++) {
-			std::cout << arr[i][j] << ' ';
-		}
-		std::cout << '\n';
-	}
 
 	// The new states are sets of states (they can't be used in the actual automaton ôêø are necessary for its construction)
 	DynamicArray<DynamicArray<size_t>> newStates; 
+
 	generateEquivalenceClasses((const bool**)arr, numberOfStates, newStates); 
-
-	std::cout << "EQUIVALENCE CLASSES:\n\n";
-	for (int i = 0; i < newStates.getSize(); i++) {
-		for (int j = 0; j < newStates[i].getSize(); j++) {
-			std::cout << newStates[i][j] << " ";
-		}
-		std::cout << std::endl;
-	}
-
 	*this = generateMinimalAutomaton(newStates, numberOfStates, *this);
 
 	// Delete the bool array 
@@ -715,9 +688,6 @@ NDFA Union(NDFA&& a1, NDFA&& a2) {
 		res._finalStates.pushBack(a2._finalStates[i] + size1);
 	}
 
-	std::cout << "UNION AUTOMATON\n\n\n"; 
-	res.print(); 
-
 	return res;
 }
 
@@ -762,9 +732,6 @@ NDFA concatenation(NDFA&& a1, NDFA&& a2) {
 			res._finalStates.erase(i);
 		}
 	}
-
-	std::cout << "CONCATENATION AUTOMATON:\n\n";
-	res.print(); 
 
 	return res;
 }
@@ -814,20 +781,22 @@ NDFA concatenation(const NDFA& a1, const NDFA& a2) {
 }
 
 NDFA kleeneStar(const NDFA& a) {
-	// Add a new state
 	NDFA copyA(a);
+	// Add a new state
 	copyA._allStates.pushBack(State());
-	size_t indexInArr = copyA._allStates.getSize() - 1;
+	size_t indexInArr = copyA._allStates.getSize() - 1; // index of the new state 
 
-	copyA._finalStates.pushBack(indexInArr);
+	copyA._finalStates.pushBack(indexInArr); // add the new state as final 
 
 	// Copy all outgoing transitions of initial states from the old automaton for the final states. 
 	for (int i = 0; i < copyA._initialStates.getSize(); i++) { // for all initial states 
 		size_t initialInd = copyA._initialStates[i]; 
 
-		for (int j = 0; j < copyA._allStates[i].getNumberOfTransitions(); j++) { // for each transition 
-			for (int k = 0; k < copyA._finalStates.getSize(); k++) {
+		for (int j = 0; j < copyA._allStates[initialInd].getNumberOfTransitions(); j++) { // for each transition of the current initial state
+			for (int k = 0; k < copyA._finalStates.getSize(); k++) { // for all final states 
 				size_t finalInd = copyA._finalStates[k];
+
+				// Copy the current transition of the current intial state for the current final state 
 				copyA._allStates[finalInd].addTransition(copyA._allStates[initialInd][j].getFirst(), copyA._allStates[initialInd][j].getSecond());
 			}
 		}
@@ -838,10 +807,6 @@ NDFA kleeneStar(const NDFA& a) {
 
 	// Add the new state as copyA final and initial state 
 	copyA._initialStates.pushBack(indexInArr);
-
-
-	std::cout << "KLEENE STAR AUTOMATON\n\n";
-	copyA.print();
 
 	return copyA;
 }
@@ -943,7 +908,6 @@ void NDFA::print() const {
 void NDFA::removeUnreachableStates() {
 	for (int i = 0; i < _allStates.getSize(); i++) {
 		if (!isReachable(i)) {
-			std::cout << i << " is unreachable\n\n\n";
 			// Remove the unreachable state from the array of states 
 			_allStates.erase(i);
 
@@ -980,9 +944,6 @@ void NDFA::removeUnreachableStates() {
 				}
 				
 			}
-
-			std::cout << "CHANGED:\n\n";
-			this->print();
 		}
 	}
 }

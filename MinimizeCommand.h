@@ -8,5 +8,9 @@ public:
 
 	void execute(std::ostream& os) override {
 		_a->minimize();
+
+		std::cout << "Minimized automaton:\n";
+		_a->print();
+		std::cout << std::endl;
 	}
 };

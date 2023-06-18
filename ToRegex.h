@@ -7,7 +7,7 @@ public:
 	ToRegex(NDFA* a) : SingleCommand(a){}
 
 	virtual void execute(std::ostream& os) override {
-		std::cout << "Regex for automaton:\n";
-		std::cout << _a->getRegEx() << "\n";
+		std::cout << "Regex for automaton:" << std::endl;
+		std::cout << _a->getRegEx() << std::endl;
 	}
 };
