@@ -10,7 +10,7 @@ public:
 	void execute(std::ostream& os) override {
 		_arr->pushBack(Union(*_a1, *_a2));
 
-		std::cout << "Union automaton:" << std::endl;
+		std::cout << "Union automaton:" << "\n\n";
 		_arr->operator[](_arr->getSize() - 1).print();
 		std::cout << std::endl;
 	}

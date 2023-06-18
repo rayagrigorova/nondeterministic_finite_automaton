@@ -59,6 +59,7 @@ Command* commandFactory(DynamicArray<NDFA>& arr) {
 		std::cout << "Enter an automaton index:" << std::endl;
 		int i;
 		std::cin >> i;
+		std::cout << "\n";
 
 		switch (ch) {
 		case 'd': return new DeterminizeCommand(&arr[i]); 
@@ -75,6 +76,7 @@ Command* commandFactory(DynamicArray<NDFA>& arr) {
 		std::cout << "Enter two indices:\n";
 		int i1, i2;
 		std::cin >> i1 >> i2;
+		std::cout << "\n";
 
 		switch (ch) {
 		case 'u': return new UnionCommand(&arr[i1], &arr[i2], &arr);

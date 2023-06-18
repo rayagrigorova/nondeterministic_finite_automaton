@@ -11,6 +11,7 @@ public:
 
 		char buff[250];
 		std::cin >> buff;
+		std::cout << "\n";
 
 		if (_a->accept(buff)) {
 			std::cout << "Accepted\n";

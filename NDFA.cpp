@@ -39,16 +39,6 @@ namespace {
 	}
 }
 
-NDFA::NDFA(DynamicArray<size_t>&& finalStates, DynamicArray<size_t>&& initialStates, DynamicArray<State>&& allStates)
-	: _finalStates(std::move(finalStates)), _initialStates(std::move(initialStates)), _allStates(std::move(allStates)){
-	setAlphabet();
-}
-
-NDFA::NDFA(const DynamicArray<size_t>& finalStates, const DynamicArray<size_t>& initialStates, const DynamicArray<State>& allStates)
-	: _initialStates(initialStates), _finalStates(finalStates), _allStates(allStates){
-	setAlphabet();
-}
-
 NDFA::NDFA(const MyString& str){
 	RegExCalculator calc(str);
 	NDFA res = calc.buildAutomaton(); 
@@ -205,7 +195,7 @@ void searchAndAdd(DynamicArray<DynamicArray<size_t>>& stateSubsets, DynamicArray
 
 void NDFA::determinize() {
 	if (isDeterminisitic(*this)) {
-		return;
+		throw std::invalid_argument("The automaton is deterministic\n");
 	}
 
 	// The arrays to be used to create the new automaton 
@@ -654,6 +644,11 @@ NDFA Union(const NDFA& a1, const NDFA& a2) {
 		res._finalStates.pushBack(a2._finalStates[i] + size1);
 	}
 
+	// Copy alphabet 
+	for (int i = 0; i < a2._alphabet.getSize(); i++) {
+		res._alphabet.pushBack(a2._alphabet[i]);
+	}
+
 	return res;
 }
 
@@ -686,6 +681,11 @@ NDFA Union(NDFA&& a1, NDFA&& a2) {
 	size_t finalCount = a2._finalStates.getSize();
 	for (int i = 0; i < finalCount; i++) {
 		res._finalStates.pushBack(a2._finalStates[i] + size1);
+	}
+
+	// Copy alphabet 
+	for (int i = 0; i < a2._alphabet.getSize(); i++) {
+		res._alphabet.pushBack(a2._alphabet[i]);
 	}
 
 	return res;
@@ -881,28 +881,28 @@ void NDFA::print() const {
 	for (int i = 0; i < _allStates.getSize(); i++) {
 		std::cout << i << " "; 
 	}
-	std::cout << std::endl; 
+	std::cout << "\n";
 
 	std::cout << "Indices of initial states:" << std::endl;
 	for (int i = 0; i < _initialStates.getSize(); i++) {
 		std::cout << _initialStates[i] << " "; 
 	}
-	std::cout << std::endl << std::endl; 
+	std::cout << "\n";
 
 	std::cout << "Indices of final states:" << std::endl;
 	for (int i = 0; i < _finalStates.getSize(); i++) {
 		std::cout << _finalStates[i] << " ";
 	}
-	std::cout << std::endl << std::endl;
+	std::cout << "\n\n";
 
-	std::cout << "Transitions:\n";
+	std::cout << "Transitions:\n\n";
 
 	for (int i = 0; i < _allStates.getSize(); i++) {
-		std::cout << "Current state: " << i << " "; 
+		std::cout << "From state: " << i << "\n"; 
 		_allStates[i].print();
 		std::cout << "\n";
 	}
-	std::cout << std::endl << std::endl;
+	std::cout << "\n";
 }
 
 void NDFA::removeUnreachableStates() {

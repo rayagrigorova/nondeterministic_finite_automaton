@@ -17,7 +17,7 @@ NDFA NullSet::buildAutomatonForLanguage() const{
 
 	all.pushBack(std::move(s1));
 
-	return NDFA(std::move(final), std::move(initial), std::move(all));
+	return NDFA(std::move(final), std::move(initial), std::move(all), DynamicArray<char>());
 }
 
 RegEx* NullSet::clone() const {

@@ -26,7 +26,7 @@ size_t State::getNumberOfTransitions() const {
 
 void State::print() const {
 	for (int i = 0; i < _arr.getSize(); i++) {
-		std::cout << "Letter: " << _arr[i].getFirst() << " Destination state: " << _arr[i].getSecond() << std::endl; 
+		std::cout << "Letter: " << _arr[i].getFirst() << " Destination state: " << _arr[i].getSecond() << "\n";
 	}
 }
 

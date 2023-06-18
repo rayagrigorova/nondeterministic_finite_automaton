@@ -14,7 +14,7 @@ public:
 
 		_arr->pushBack(getAutomatonForRegEx(buff)); 
 
-		std::cout << "\nResult automaton:\n";
+		std::cout << "\nResult automaton:\n\n";
 		_arr->operator[](_arr->getSize() - 1).print();
 		std::cout << std::endl;
 	}

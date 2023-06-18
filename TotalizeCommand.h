@@ -9,7 +9,7 @@ public:
 	void execute(std::ostream& os) override {
 		_a->makeTotal();
 
-		std::cout << "Total automaton:" << std::endl;
+		std::cout << "Total automaton:" << "\n\n";
 		_a->print();
 		std::cout << std::endl;
 	}

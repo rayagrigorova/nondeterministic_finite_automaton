@@ -28,8 +28,6 @@ class NDFA {
 
 public:
 	NDFA() = default; 
-	NDFA(DynamicArray<size_t>&& finalStates, DynamicArray<size_t>&& initialStates, DynamicArray<State>&& allStates); 
-	NDFA(const DynamicArray<size_t>& finalStates, const DynamicArray<size_t>& initialStates, const DynamicArray<State>& allStates);
 
 	NDFA(DynamicArray<size_t>&& finalStates, DynamicArray<size_t>&& initialStates, DynamicArray<State>&& allStates, DynamicArray<char>&& alphabet);
 	NDFA(const DynamicArray<size_t>& finalStates, const DynamicArray<size_t>& initialStates, const DynamicArray<State>& allStates, const DynamicArray<char>& alphabet);
@@ -51,7 +49,6 @@ public:
 	friend NDFA concatenation(NDFA&& a1, NDFA&& a2);
 
 	friend NDFA kleeneStar(const NDFA& a);
-	//friend NDFA kleeneStar(NDFA& a);
 
 	MyString getRegEx() const; 
 
@@ -69,6 +66,5 @@ NDFA kleeneStar(const NDFA& a);
 
 NDFA Union(NDFA&& a1, NDFA&& a2);
 NDFA concatenation(NDFA&& a1, NDFA&& a2);
-//NDFA kleeneStar(NDFA& a);
 
 NDFA getAutomatonForRegEx(MyString regEx);

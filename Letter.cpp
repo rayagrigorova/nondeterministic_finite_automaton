@@ -10,6 +10,7 @@ NDFA Letter::buildAutomatonForLanguage() const {
 	// a transition with the given letter to a final state. 
 	DynamicArray<size_t> initial, final;
 	DynamicArray<State> all; 
+	DynamicArray<char> alphabet;
 
 	State s1, s2;
 
@@ -22,7 +23,9 @@ NDFA Letter::buildAutomatonForLanguage() const {
 	all.pushBack(std::move(s1));
 	all.pushBack(std::move(s2));
 
-	NDFA res(std::move(final), std::move(initial), std::move(all));
+	alphabet.pushBack(_ch);
+
+	NDFA res(std::move(final), std::move(initial), std::move(all), std::move(alphabet));
 
 	return res; 
 }
