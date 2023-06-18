@@ -6,11 +6,11 @@ class MinimizeCommand : public SingleCommand {
 public:
 	MinimizeCommand(NDFA* a) : SingleCommand(a) {}
 
-	void execute(std::ostream& os) override {
+	void execute(std::istream& is, std::ostream& os) override {
 		_a->minimize();
 
-		std::cout << "Minimized automaton:\n";
-		_a->print();
-		std::cout << std::endl;
+		os << "Minimized automaton:\n";
+		_a->print(os);
+		os << std::endl;
 	}
 };

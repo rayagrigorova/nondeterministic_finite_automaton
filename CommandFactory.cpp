@@ -59,7 +59,7 @@ Command* commandFactory(DynamicArray<NDFA>& arr) {
 		std::cout << "Enter an automaton index:" << std::endl;
 		int i;
 		std::cin >> i;
-		std::cout << "\n";
+		std::cout << '\n';
 
 		switch (ch) {
 		case 'd': return new DeterminizeCommand(&arr[i]); 
@@ -91,6 +91,7 @@ Command* commandFactory(DynamicArray<NDFA>& arr) {
 
 	// Invalid command
 	else {
+		std::cout << "Error char: " << ch << std::endl; 
 		throw std::invalid_argument("Invalid command!\n");
 	}
 }

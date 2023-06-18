@@ -20,7 +20,7 @@ public:
 	const Pair<char, int>& operator[](size_t ind) const; // constant 
 	Pair<char, int>& operator[](size_t ind); // non-constant 
 
-	void print() const; 
+	void print(std::ostream& os) const; 
 
 	int getDestinationState(char ch) const; 
 

@@ -6,12 +6,12 @@ class EmptyCheck : public SingleCommand {
 public:
 	EmptyCheck(NDFA* a) : SingleCommand(a) {}
 
-	void execute(std::ostream& os) override {
+	void execute(std::istream& is, std::ostream& os) override {
 		if (_a->isEmptyLanguage()) {
-			std::cout << "The language of the automaton is empty\n";
+			os << "The language of the automaton is empty\n\n";
 		}
 		else {
-			std::cout << "The language of the automaton isn't empty\n";
+			os << "The language of the automaton isn't empty\n\n";
 		}
 	}
 };

@@ -54,7 +54,7 @@ public:
 
 	friend NDFA getAutomatonForRegEx(MyString regEx); 
 
-	void print() const; 
+	void print(std::ostream& os) const; 
 
 	friend bool isDeterminisitic(const NDFA& a); 
 	friend NDFA generateMinimalAutomaton(const DynamicArray<DynamicArray<size_t>>& newStates, size_t numberOfStates, const NDFA& originalAutomaton); 

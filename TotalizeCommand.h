@@ -6,11 +6,11 @@ class TotalizeCommand : public SingleCommand {
 public:
 	TotalizeCommand(NDFA* a) : SingleCommand(a) {}
 
-	void execute(std::ostream& os) override {
+	void execute(std::istream& is, std::ostream& os) override {
 		_a->makeTotal();
 
-		std::cout << "Total automaton:" << "\n\n";
-		_a->print();
-		std::cout << std::endl;
+		os << "Total automaton:" << "\n\n";
+		_a->print(os);
+		os << std::endl;
 	}
 };

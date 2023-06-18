@@ -6,17 +6,17 @@ class DeterminizeCommand : public SingleCommand {
 public:
 	DeterminizeCommand(NDFA* a) : SingleCommand(a){}
 
-	void execute(std::ostream& os) override {
+	void execute(std::istream& is, std::ostream& os) override {
 		try {
 			_a->determinize();
 		}
 		catch (std::exception& e) {
-			std::cout << e.what() << std::endl;
+			os << e.what() << std::endl;
 			return;
 		}
 
-		std::cout << "Determinized automaton:\n";
-		_a->print();
-		std::cout << std::endl;
+		os << "Determinized automaton:\n\n";
+		_a->print(os);
+		os << std::endl;
 	}
 };

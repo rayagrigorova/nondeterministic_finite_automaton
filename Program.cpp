@@ -11,8 +11,14 @@ Program& Program::getInstance(){
 
 void Program::run() {
 	while (1) {
-		Command* toExecute = commandFactory(_arr);
-		toExecute->execute(std::cout);
+		try {
+			Command* toExecute = commandFactory(_arr);
+			toExecute->execute(std::cin, std::cout);
+		}
+		catch (std::exception& e) {
+			std::cout << e.what() << "\n"; 
+			break;
+		}
 
 		//delete toExecute;
 	}

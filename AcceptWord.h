@@ -6,18 +6,18 @@ class AcceptWord : public SingleCommand {
 public:
 	AcceptWord(NDFA* a) : SingleCommand(a) {}
 
-	void execute(std::ostream& os) override {
-		std::cout << "Enter a word:\n";
+	void execute(std::istream& is, std::ostream& os) override {
+		os << "Enter a word:\n";
 
 		char buff[250];
-		std::cin >> buff;
-		std::cout << "\n";
+		is >> buff;
+		os << "\n";
 
 		if (_a->accept(buff)) {
-			std::cout << "Accepted\n";
+			os << "Accepted\n\n";
 		}
 		else {
-			std::cout << "Not accepted\n";
+			os << "Not accepted\n\n";
 		}
 	}
 };

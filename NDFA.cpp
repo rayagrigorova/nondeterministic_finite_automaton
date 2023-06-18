@@ -357,7 +357,12 @@ NDFA generateMinimalAutomaton(const DynamicArray<DynamicArray<size_t>>& newState
 // Source used: https://store.fmi.uni-sofia.bg/fmi/logic/static/eai/eai.pdf
 void NDFA::minimize() {
 	removeUnreachableStates();
-	determinize();
+	try {
+		determinize();
+	}
+	catch (std::exception& e) {
+
+	}
 
 	size_t numberOfStates = _allStates.getSize();
 
@@ -436,19 +441,19 @@ void NDFA::makeTotal() {
 
 	for (int i = 0; i < _allStates.getSize(); i++) { // for each state 
 
-		int32_t transitionsMask = 0; // store the letters of the outgoing transitions 
+		uint32_t transitionsMask = 0; // store the letters of the outgoing transitions  for the current state 
 
 		for (int j = 0; j < _allStates[i].getNumberOfTransitions(); j++) { // for each transition 
 
 			// This way, the first bit will correspond to 'a', the second one - to 'b' and so on. 
-			int32_t currentMask = 1 << (32 - (_allStates[i][j].getFirst() - 'a' + 1));
+			uint32_t currentMask = 1 << (32 - (_allStates[i][j].getFirst() - 'a' + 1));
 
 			// Add the transition
 			transitionsMask |= currentMask;
 		}
 
 		for (int l = 0; l < _alphabet.getSize(); l++) { // for all symbols in the alphabet 
-			int32_t currentMask = 1 << (32 - (_alphabet[l] - 'a' + 1)); // Mask for the current letter of the alphabet
+			uint32_t currentMask = 1 << (32 - (_alphabet[l] - 'a' + 1)); // Mask for the current letter of the alphabet
 
 			if (!(transitionsMask & currentMask)) { // Check if the bit for the transition with the current letter is set to false 
 				isTotal = false;
@@ -500,7 +505,7 @@ bool NDFA::accept(const StringView& word) const{
 bool NDFA::accept(const StringView& word, int currentState) const{
 
 	// Base of the recursion 
-	if (word.length() == 0) {
+	if (word.length() == 0 && isFinal(currentState)) {
 		return true;
 	}
 
@@ -646,7 +651,9 @@ NDFA Union(const NDFA& a1, const NDFA& a2) {
 
 	// Copy alphabet 
 	for (int i = 0; i < a2._alphabet.getSize(); i++) {
-		res._alphabet.pushBack(a2._alphabet[i]);
+		if (!contains(res._alphabet, a2._alphabet[i])) {
+			res._alphabet.pushBack(a2._alphabet[i]);
+		}
 	}
 
 	return res;
@@ -685,7 +692,9 @@ NDFA Union(NDFA&& a1, NDFA&& a2) {
 
 	// Copy alphabet 
 	for (int i = 0; i < a2._alphabet.getSize(); i++) {
-		res._alphabet.pushBack(a2._alphabet[i]);
+		if (!contains(res._alphabet, a2._alphabet[i])) {
+			res._alphabet.pushBack(a2._alphabet[i]);
+		}
 	}
 
 	return res;
@@ -773,7 +782,7 @@ NDFA concatenation(const NDFA& a1, const NDFA& a2) {
 	// Remove the states of the first automaton as final if needed 
 	if (!a2.accept(&EPSILON)) {
 		for (int i = 0; i < firstAutomatonFinalCount; i++) {
-			res._finalStates.popBack();
+			res._finalStates.erase(i);
 		}
 	}
 
@@ -876,33 +885,38 @@ bool NDFA::isReachable(size_t fromInd, size_t destInd) const{
 	return isReachable;
 }
 
-void NDFA::print() const {
-	std::cout << "Indices of all states:" << std::endl;
+void NDFA::print(std::ostream& os) const {
+	os << "Indices of all states:" << std::endl;
 	for (int i = 0; i < _allStates.getSize(); i++) {
-		std::cout << i << " "; 
+		os << i << " "; 
 	}
-	std::cout << "\n";
+	os << "\n";
 
-	std::cout << "Indices of initial states:" << std::endl;
+	os << "Indices of initial states:" << std::endl;
 	for (int i = 0; i < _initialStates.getSize(); i++) {
-		std::cout << _initialStates[i] << " "; 
+		os << _initialStates[i] << " "; 
 	}
-	std::cout << "\n";
+	os << "\n";
 
-	std::cout << "Indices of final states:" << std::endl;
+	os << "Indices of final states:" << std::endl;
 	for (int i = 0; i < _finalStates.getSize(); i++) {
-		std::cout << _finalStates[i] << " ";
+		os << _finalStates[i] << " ";
 	}
-	std::cout << "\n\n";
+	os << "\n\n";
 
-	std::cout << "Transitions:\n\n";
+	os << "Transitions:\n\n";
 
 	for (int i = 0; i < _allStates.getSize(); i++) {
-		std::cout << "From state: " << i << "\n"; 
-		_allStates[i].print();
-		std::cout << "\n";
+		os << "From state: " << i << "\n"; 
+		_allStates[i].print(os);
+		os << "\n";
 	}
-	std::cout << "\n";
+
+	os << "\nAlphabet:\n";
+	for (int i = 0; i < _alphabet.getSize(); i++) {
+		os << _alphabet[i] << ' ';
+	}
+	os << "\n";
 }
 
 void NDFA::removeUnreachableStates() {
