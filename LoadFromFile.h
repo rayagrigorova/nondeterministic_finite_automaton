@@ -13,8 +13,12 @@ public:
 		std::cin >> buff;
 
 		NDFA a;
-		a.loadFromFile(buff);
+
+		a.loadFromFile(buff); // This line could throw an exception
+
 		_arr->pushBack(std::move(a));
+
+		os << "\nFile loaded successfully\n\n";
 
 	}
 };

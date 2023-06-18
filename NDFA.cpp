@@ -966,7 +966,7 @@ void NDFA::saveToFile(const char* filename) const {
 	file << _alphabet;
 
 	if (!file.is_open()) {
-		return;
+		throw std::logic_error("File not found.\n");
 	}
 
 	file.close();
@@ -981,7 +981,7 @@ void NDFA::loadFromFile(const char* filename){
 	file >> _alphabet;
 
 	if (!file.is_open()) {
-		return;
+		throw std::logic_error("File not found.\n");
 	}
 
 	file.close();

@@ -7,11 +7,13 @@ public:
 	SaveToFile(NDFA* a) : SingleCommand(a){}
 
 	void execute(std::istream& is, std::ostream& os) override {
-		std::cout << "Enter the name of the file:\n";
+		os << "Enter the name of the file:\n";
 
 		char buff[250];
-		std::cin >> buff;
+		is >> buff;
 
-		_a->saveToFile(buff); 
+		_a->saveToFile(buff); // This line could throw an exception
+		
+		os << "\nFile saved successfully\n\n"; 
 	}
 };
