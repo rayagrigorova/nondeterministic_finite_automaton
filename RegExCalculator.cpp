@@ -67,8 +67,6 @@ const RegEx* RegExCalculator::getRegEx() const {
 	return _expr;
 }
 
-
-
 RegEx* RegExCalculator::parseExpr(const StringView& str) {
 	if (str.length() == 1) {
 		switch (str[0]) {

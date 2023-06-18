@@ -66,6 +66,12 @@ public:
 	void saveToFile(const char* filename) const;
 	void loadFromFile(const char* filename);
 
+	friend void copyStates(NDFA& res, const NDFA& a2, size_t size2, size_t size1); 
+	friend void copyInitial(NDFA& res, const NDFA& a2, size_t size1);
+	friend void copyFinal(NDFA& res, const NDFA& a2, size_t size1);
+	friend void copyAlphabet(NDFA& res, const NDFA& a2);
+
+	friend void addInitialOutgoingTransitions(const NDFA& a2, NDFA& res, size_t firstAutomatonFinalCount, size_t indexingStart);
 };
 
 NDFA Union(const NDFA& a1, const NDFA& a2);

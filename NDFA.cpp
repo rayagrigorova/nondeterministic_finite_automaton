@@ -287,6 +287,23 @@ namespace {
 		return -1;
 	}
 
+
+
+	// Find the index of an equivalence class where a given state belongs (used in generateMinimalAutomaton to add transitions)
+	int findStateEquivalenceClass(const DynamicArray<DynamicArray<size_t>>& equivalenceClasses, size_t stateName) {
+		for (int i = 0; i < equivalenceClasses.getSize(); i++) { // For each class
+			for (int j = 0; j < equivalenceClasses[i].getSize(); j++) { // For each state in the class 
+				if (equivalenceClasses[i][j] == stateName) {
+					// return the index of the equivalence class 
+					return i;
+				}
+			}
+		}
+		// not found
+		return -1;
+	}
+}
+
 	void generateEquivalenceClasses(const bool** arr, size_t numberOfStates, DynamicArray<DynamicArray<size_t>>& newStates) {
 		// This is a flag to generate sets for states that aren't equivalent to any other state
 		bool isSingleton;
@@ -329,21 +346,6 @@ namespace {
 			}
 		}
 	}
-
-	// Find the index of an equivalence class where a given state belongs (used in generateMinimalAutomaton to add transitions)
-	int findStateEquivalenceClass(const DynamicArray<DynamicArray<size_t>>& equivalenceClasses, size_t stateName) {
-		for (int i = 0; i < equivalenceClasses.getSize(); i++) { // For each class
-			for (int j = 0; j < equivalenceClasses[i].getSize(); j++) { // For each state in the class 
-				if (equivalenceClasses[i][j] == stateName) {
-					// return the index of the equivalence class 
-					return i;
-				}
-			}
-		}
-		// not found
-		return -1;
-	}
-}
 
 // Using the transitions of the old automaton and the created equivalence classes, generate a minimal NDFA 
 NDFA generateMinimalAutomaton(const DynamicArray<DynamicArray<size_t>>& newStates, size_t numberOfStates, const NDFA& originalAutomaton) {
@@ -400,12 +402,14 @@ void NDFA::minimize() {
 		// Create the sub-arrays 
 		arr[i] = new bool[numberOfStates];
 
+		// Initialization of the array 
+		// Put states in two equivalence classes - F and Q\F
 		for (int j = 0; j < numberOfStates; j++) {
 			bool firstIsFinal = isFinal(i); 
 			bool secondIsFinal = isFinal(j);
 
 			// p is final <-> q isn't final 
-			// Mark all pairs where the two states aren't of the same finality 
+			// Mark all pairs where the two states aren't of the same finality as false in the table 
 			if (firstIsFinal && !secondIsFinal ||
 				!firstIsFinal && secondIsFinal) {
 				arr[i][j] = 0;
@@ -449,30 +453,30 @@ void NDFA::minimize() {
 	*this = generateMinimalAutomaton(newStates, numberOfStates, *this);
 
 	// Delete the bool array 
+	
 	// For each sub-array
 	for (int i = 0; i < numberOfStates; i++) {
 		delete[] arr[i];
-	
 	}
+
 	// Free the array of pointers 
 	delete[] arr; 
 }
 
 void NDFA::makeTotal() {
-	// A total automaton is such that for each of its
-	// states p and each letter of the alphabet x there exists at least one transition from p with x
+	// A total automaton is such that for each of its states p and each letter of the
+	// alphabet x there exists at least one transition from p with x
 
-	// I will simultaneously check if the automaton is total and if there is a transition with each letter
 	bool isTotal = true;
-	size_t newStateIndex = _allStates.getSize(); // The index of the new state
+	size_t newStateIndex = _allStates.getSize(); // The index of the new state to be added (if necessary)
 
 	for (int i = 0; i < _allStates.getSize(); i++) { // for each state 
 
-		uint32_t transitionsMask = 0; // store the letters of the outgoing transitions  for the current state 
+		uint32_t transitionsMask = 0; // store the letters of the outgoing transitions for the current state 
 
 		for (int j = 0; j < _allStates[i].getNumberOfTransitions(); j++) { // for each transition 
 
-			// This way, the first bit will correspond to 'a', the second one - to 'b' and so on. 
+			// The first bit will correspond to 'a', the second one - to 'b' and so on. 
 			uint32_t currentMask = 1 << (32 - (_allStates[i][j].getFirst() - 'a' + 1));
 
 			// Add the transition
@@ -484,6 +488,7 @@ void NDFA::makeTotal() {
 
 			if (!(transitionsMask & currentMask)) { // Check if the bit for the transition with the current letter is set to false 
 				isTotal = false;
+
 				// The current state doesn't have a transition with _alphabet[l]. Add a transition to the new state. 
 				_allStates[i].addTransition(_alphabet[l], newStateIndex);
 			}
@@ -496,7 +501,8 @@ void NDFA::makeTotal() {
 		_allStates.pushBack(State());
 
 		for (int l = 0; l < _alphabet.getSize(); l++) {
-			// For each letter of the alphabet, ad a self loop to the new state 
+			// For each letter of the alphabet, add a self loop to the new state 
+			// The new state is an error state 
 			_allStates[newStateIndex].addTransition(_alphabet[l], newStateIndex);
 		}
 	}
@@ -504,8 +510,7 @@ void NDFA::makeTotal() {
 }
 
 bool NDFA::accept(const StringView& word) const{
-	// The condition under which a language contains epsilon is that for some state qi: 
-	// qi is both initial and final 
+	// The condition under which a language contains epsilon is that for some state qi: qi is both initial and final 
 	if (word.length() == 1 && word[0] == EPSILON) {
 		for (int i = 0; i < _initialStates.getSize(); i++) {
 			for (int j = 0; j < _finalStates.getSize(); j++) {
@@ -518,8 +523,8 @@ bool NDFA::accept(const StringView& word) const{
 	}
 
 	for (int i = 0; i < _initialStates.getSize(); i++) {
-		// Use a private function accept to check if one of the initial states 
-		// accepts the word - at least one initial state's right language should contain the word. 
+		// Use a private function accept(...) to check if at least one of the initial states 
+		// accepts the word - at least one initial state's language should contain it. 
 		if (accept(word, _initialStates[i])) {
 			return true;
 		}
@@ -538,19 +543,23 @@ bool NDFA::accept(const StringView& word, int currentState) const{
 
 	// Go through all transitions of the current state 
 	for (int i = 0; i < _allStates[currentState].getNumberOfTransitions(); i++) {
+
 		// If there is a transition with the first letter of the word 
 		if (_allStates[currentState][i].getFirst() == word[0]) {
+
+			// Remove the first letter of the word and set the destination state as a current state 
 			return accept(word.substr(1, word.length() - 1), _allStates[currentState][i].getSecond()); 
 		}
 	}
 
-	// If we go through all possible qi and possible destination states qj without finding a transition (qi, x, qj) for 
-	// some i,j and x = word[0], then the subtree can't possibly contain a valid path with a label w
+	// If we go through all possible destination states qj without finding a transition (qi, x, qj) for 
+	// some i, j, x = word[0], then there can't possibly be a valid path from qi with a label w
 	return false;
 }
 
 bool NDFA::isEmptyLanguage() const {
 	for (int i = 0; i < _finalStates.getSize(); i++) {
+		// Check if at least on final state is reachable 
 		if (isReachable(_finalStates[i])) {
 			return false;
 		}
@@ -613,8 +622,8 @@ MyString NDFA::getRegEx() const {
 			}
 		}
 	}
-	 //Get the final expression
-	 //Expr uses resources managed from R
+	 // Get the final expression
+	 // Expr uses resources managed from R
 	RegEx* expr = new NullSet();
 	size_t initialInd = _initialStates[0];
 
@@ -627,12 +636,11 @@ MyString NDFA::getRegEx() const {
 	// Save result and delete R 
 	MyString res = expr->toString();
 
-
 	for (int i = 0; i < Q; i++) {
 		for (int j = 0; j < Q; j++) {
 			// for (int k = 0; k <= Q; k++) {
 
-			//	 //Delete pointers RegEx* (created using new)
+			//// Delete pointers RegEx* (created using new)
 			//delete R[i][j][k]; 
 			//	
 			//}
@@ -647,41 +655,52 @@ MyString NDFA::getRegEx() const {
 	return res;
 }
 
-// The result of creating an union automaton is like "putting the automata next to each other"
-NDFA Union(const NDFA& a1, const NDFA& a2) {	
-	NDFA res(a1);
-
-	// Get the maximal index for a state in the second automaton 
-	size_t size1 = a1._allStates.getSize();
-	size_t size2 = a2._allStates.getSize();
-
+void copyStates(NDFA& res, const NDFA& a2, size_t size2,  size_t size1) {
 	// Copy states 
 	for (int i = 0; i < size2; i++) {
 		res._allStates.pushBack(State());
 		size_t newStateInd = res._allStates.getSize() - 1;
+
 		for (int j = 0; j < a2._allStates[i].getNumberOfTransitions(); j++) {
 			res._allStates[newStateInd].addTransition(a2._allStates[i][j].getFirst(), a2._allStates[i][j].getSecond() + size1);
 		}
 	}
+}
 
-	// Copy initial 
+void copyInitial(NDFA& res, const NDFA& a2, size_t size1) {
 	size_t initalCount = a2._initialStates.getSize();
 	for (int i = 0; i < initalCount; i++) {
 		res._initialStates.pushBack(a2._initialStates[i] + size1);
 	}
+}
 
-	// Copy final
+void copyFinal(NDFA& res, const NDFA& a2, size_t size1) {
 	size_t finalCount = a2._finalStates.getSize();
 	for (int i = 0; i < finalCount; i++) {
 		res._finalStates.pushBack(a2._finalStates[i] + size1);
 	}
+}
 
+void copyAlphabet(NDFA& res, const NDFA& a2) {
 	// Copy alphabet 
 	for (int i = 0; i < a2._alphabet.getSize(); i++) {
 		if (!contains(res._alphabet, a2._alphabet[i])) {
 			res._alphabet.pushBack(a2._alphabet[i]);
 		}
 	}
+}
+
+// The result of creating an union automaton is like "putting the automata next to each other"
+NDFA Union(const NDFA& a1, const NDFA& a2) {	
+	NDFA res(a1);
+
+	size_t size1 = a1._allStates.getSize();
+	size_t size2 = a2._allStates.getSize();
+
+	copyStates(res, a2, size2, size1);
+	copyInitial(res, a2, size1);
+	copyFinal(res, a2, size1);
+	copyAlphabet(res, a2); 
 
 	return res;
 }
@@ -695,51 +714,16 @@ NDFA Union(NDFA&& a1, NDFA&& a2) {
 	// Get the maximal index for a state in the second automaton 
 	size_t size2 = a2._allStates.getSize();
 
-	// Copy states 
-	for (int i = 0; i < size2; i++) {
-		res._allStates.pushBack(State());
-		size_t newStateInd = res._allStates.getSize() - 1;
-
-		for (int j = 0; j < a2._allStates[i].getNumberOfTransitions(); j++) {
-			res._allStates[newStateInd].addTransition(a2._allStates[i][j].getFirst(), a2._allStates[i][j].getSecond() + size1);
-		}
-	}
-
-	// Copy initial 
-	size_t initalCount = a2._initialStates.getSize();
-	for (int i = 0; i < initalCount; i++) {
-		res._initialStates.pushBack(a2._initialStates[i] + size1);
-	}
-
-	// Copy final
-	size_t finalCount = a2._finalStates.getSize();
-	for (int i = 0; i < finalCount; i++) {
-		res._finalStates.pushBack(a2._finalStates[i] + size1);
-	}
-
-	// Copy alphabet 
-	for (int i = 0; i < a2._alphabet.getSize(); i++) {
-		if (!contains(res._alphabet, a2._alphabet[i])) {
-			res._alphabet.pushBack(a2._alphabet[i]);
-		}
-	}
+	copyStates(res, a2, size2, size1);
+	copyInitial(res, a2, size1);
+	copyFinal(res, a2, size1);
+	copyAlphabet(res, a2);
 
 	return res;
 }
 
-NDFA concatenation(NDFA&& a1, NDFA&& a2) {
-	bool acceptEpsilon = a2.accept(&EPSILON); 
-	size_t indexingStart = a1._allStates.getSize(); // change the indices of the states of the second automaton 
-
-	size_t secondAutomatonInitialCount = a2._initialStates.getSize(); // to remove the states of the second automaton as initial 
-	size_t firstAutomatonFinalCount = a1._finalStates.getSize(); // to remove final states of the first automaton if necessary 
-
-	// "Put the automata next to each other"
-	NDFA res(Union(std::move(a1), std::move(a2)));
-
-	// Add all outgoing transitions from start states of the second automaton to the end states of the first automaton 
-
-	for (int i = 0; i < a2._initialStates.getSize(); i++) { // For all initial states of the second automaton 
+void addInitialOutgoingTransitions(const NDFA& a2, NDFA& res, size_t firstAutomatonFinalCount, size_t indexingStart) {
+		for (int i = 0; i < a2._initialStates.getSize(); i++) { // For all initial states of the second automaton 
 		// The index of the current initial state in the array of states 
 		int initialStateInd = a2._initialStates[i]; 
 
@@ -756,6 +740,20 @@ NDFA concatenation(NDFA&& a1, NDFA&& a2) {
 			}
 		}
 	}
+}
+
+NDFA concatenation(NDFA&& a1, NDFA&& a2) {
+	bool acceptEpsilon = a2.accept(&EPSILON); 
+	size_t indexingStart = a1._allStates.getSize(); // change the indices of the states of the second automaton 
+
+	size_t secondAutomatonInitialCount = a2._initialStates.getSize(); // to remove the initial states of the second automaton
+	size_t firstAutomatonFinalCount = a1._finalStates.getSize(); // to remove final states of the first automaton (if necessary)
+
+	// "Put the automata next to each other"
+	NDFA res(Union(std::move(a1), std::move(a2)));
+
+	// Add all outgoing transitions from start states of the second automaton to the end states of the first automaton 
+	addInitialOutgoingTransitions(a2, res, firstAutomatonFinalCount, indexingStart);
 
 	// Remove the states of the second automaton as initial 
 	for (int i = 0; i < secondAutomatonInitialCount; i++) {
@@ -782,24 +780,7 @@ NDFA concatenation(const NDFA& a1, const NDFA& a2) {
 
 	// Add all outgoing transitions from start states of the second automatons to the end states of the first automaton 
 
-	// All initial states of the second automaton 
-	for (int i = 0; i < a2._initialStates.getSize(); i++) {
-		// The index of the current initial state in the array of states 
-		int initialStateInd = a2._initialStates[i];
-
-		// All outgoing transitions of the current state 
-		for (int j = 0; j < a2._allStates[initialStateInd].getNumberOfTransitions(); j++) {
-
-			// All final states of the first automaton 
-			for (int k = 0; k < firstAutomatonFinalCount; k++) {
-
-				// The index of the current final state in the array of states 
-				int finalInd = res._finalStates[k];
-
-				res._allStates[finalInd].addTransition(a2._allStates[initialStateInd][j].getFirst(), a2._allStates[initialStateInd][j].getSecond() + indexingStart);
-			}
-		}
-	}
+	addInitialOutgoingTransitions(a2, res, firstAutomatonFinalCount, indexingStart);
 
 	// Remove the states of the second automaton as initial
 	for (int i = 0; i < secondAutomatonInitialCount; i++) {
@@ -818,6 +799,7 @@ NDFA concatenation(const NDFA& a1, const NDFA& a2) {
 
 NDFA kleeneStar(const NDFA& a) {
 	NDFA copyA(a);
+
 	// Add a new state
 	copyA._allStates.pushBack(State());
 	size_t indexInArr = copyA._allStates.getSize() - 1; // index of the new state 
@@ -829,19 +811,20 @@ NDFA kleeneStar(const NDFA& a) {
 		size_t initialInd = copyA._initialStates[i]; 
 
 		for (int j = 0; j < copyA._allStates[initialInd].getNumberOfTransitions(); j++) { // for each transition of the current initial state
+
 			for (int k = 0; k < copyA._finalStates.getSize(); k++) { // for all final states 
 				size_t finalInd = copyA._finalStates[k];
 
-				// Copy the current transition of the current intial state for the current final state 
+				// Copy the current transition of the current initial state for the current final state 
 				copyA._allStates[finalInd].addTransition(copyA._allStates[initialInd][j].getFirst(), copyA._allStates[initialInd][j].getSecond());
 			}
 		}
 	}
 
-	// Remove all other initial states as initial states 
+	// Remove all other initial states
 	copyA._initialStates.clear();
 
-	// Add the new state as copyA final and initial state 
+	// Add the new state as initial
 	copyA._initialStates.pushBack(indexInArr);
 
 	return copyA;
@@ -855,7 +838,7 @@ NDFA getAutomatonForRegEx(MyString regEx){
 // This function will only be used to call the overload isReachable(fromInd, stateInd) for all start states 
 bool NDFA::isReachable(size_t stateInd) const{
 	for (int i = 0; i < _initialStates.getSize(); i++) {
-		// Initial states are reachable in 0 steps 
+		// If the state is initial or reachable from the current initial state
 		if (_initialStates[i] == stateInd || isReachable(_initialStates[i], stateInd)) {
 			return true;
 		}
@@ -974,10 +957,12 @@ void NDFA::removeUnreachableStates() {
 			for (int j = 0; j < _allStates.getSize(); j++) {
 
 				for (int k = 0; k < _allStates[j].getNumberOfTransitions(); k++) { // for all transitions
+
 					// Decrement destination indices that are higher than the unreachable state's 
 					if (_allStates[j][k].getSecond() > i) {
 						_allStates[j][k].setSecond(_allStates[j][k].getSecond() - 1);
 					}
+
 					// Remove transitions to the removed state 
 					else if (_allStates[j][k].getSecond() == i) {
 						_allStates[j]._arr.erase(k);
@@ -992,14 +977,14 @@ void NDFA::removeUnreachableStates() {
 void NDFA::saveToFile(const char* filename) const {
 	std::ofstream file(filename, std::ios::app);
 
+	if (!file.is_open()) {
+		throw std::logic_error("File not found.\n");
+	}
+
 	file << _finalStates;
 	file << _initialStates;
 	file << _allStates;
 	file << _alphabet;
-
-	if (!file.is_open()) {
-		throw std::logic_error("File not found.\n");
-	}
 
 	file.close();
 }
@@ -1007,14 +992,14 @@ void NDFA::saveToFile(const char* filename) const {
 void NDFA::loadFromFile(const char* filename){
 	std::ifstream file(filename, std::ios::app);
 
+	if (!file.is_open()) {
+		throw std::logic_error("File not found.\n");
+	}
+
 	file >> _finalStates;
 	file >> _initialStates;
 	file >> _allStates;
 	file >> _alphabet;
-
-	if (!file.is_open()) {
-		throw std::logic_error("File not found.\n");
-	}
 
 	file.close();
 }

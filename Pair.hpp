@@ -58,13 +58,13 @@ std::ostream& operator<<(std::ostream& os, const Pair<T, S>& p){
 
 template <typename T, typename S>
 std::istream& operator>>(std::istream& is, Pair<T, S>& p) {
-	is.get();
+	is.get(); // skip space 
 
 	T obj;
 	is >> obj; 
 	p.setFirst(obj);
 
-	is.get();
+	is.get(); // skip space 
 
 	S obj2;
 	is >> obj2;

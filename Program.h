@@ -2,6 +2,7 @@
 
 #include "NDFA.h"
 
+// A singleton class 
 class Program {
 	DynamicArray<NDFA> _arr;
 
