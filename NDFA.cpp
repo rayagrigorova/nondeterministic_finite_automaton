@@ -59,9 +59,9 @@ NDFA::NDFA(const DynamicArray<size_t>& finalStates, const DynamicArray<size_t>& 
 }
 
 void NDFA::setAlphabet() {
-	for (int i = 0; i < _allStates.getSize(); i++) { // for each state
-		for (int j = 0; j < _allStates[i].getNumberOfTransitions(); j++) { // for each transition 
-			if (!contains<char>(_alphabet, _allStates[i][j].getFirst())) {
+	for (int i = 0; i < _allStates.getSize(); i++) { // For each state
+		for (int j = 0; j < _allStates[i].getNumberOfTransitions(); j++) { // For each transition 
+			if (!contains<char>(_alphabet, _allStates[i][j].getFirst())) { // If the transition character hasn't been added yet
 				_alphabet.pushBack(_allStates[i][j].getFirst());
 			}
 		}
@@ -88,13 +88,14 @@ bool isDeterminisitic(const NDFA& a) {
 		// I assume that the alphabet only contains symbols a-z
 		uint32_t transitionsMask = 0; // store the letters of the outgoing transitions 
 
-
-		for (int j = 0; j < a._allStates[i].getNumberOfTransitions(); j++) { // for each transition 
+		// Check if there is no more than 1 transition with each letter 
+		for (int j = 0; j < a._allStates[i].getNumberOfTransitions(); j++) { // for each transition of the current state
 			// Create a mask for the current transition 
 			// The first bit will correspond to 'a', the second one - to 'b' and so on. 
 			uint32_t currentMask = 1 << (32 - (a._allStates[i][j].getFirst() - 'a' + 1)); 
 
 			// (transitionsMask & currentMask) will return true if there exists a transition with the same letter 
+			// (both bits are set to 1)
 			if (transitionsMask & currentMask) {
 				return false; 
 			}
@@ -116,82 +117,93 @@ bool isDeterminisitic(const NDFA& a) {
 
 	return true;
 }
-//(stateSubsets, i, currentSubset, newState, _alphabet[i], _allStates)
-void addToSubset(DynamicArray<DynamicArray<size_t>>& stateSubsets, size_t i, size_t currentSubset, DynamicArray<size_t>& newState, char ch, DynamicArray<State>& allStates) {
-	for (int j = 0; j < stateSubsets[currentSubset].getSize(); j++) { // for each state from the current subset 
 
-		// Get the position of the current state in the _allStates array 
-		size_t currentStateIndex = stateSubsets[currentSubset][j];
+// Helper functions for the determinization algorithm 
+namespace {
 
-		for (int k = 0; k < allStates[currentStateIndex].getNumberOfTransitions(); k++) { // For each transition of the current state 
-			// Skip transitions with other letters 
-			if (allStates[currentStateIndex][k].getFirst() != ch) {
-				continue;
-			}
+	// A helper function 
+	void addToSubset(DynamicArray<DynamicArray<size_t>>& stateSubsets, size_t i, size_t currentSubset, DynamicArray<size_t>& newState, char ch, DynamicArray<State>& allStates) {
+		for (int j = 0; j < stateSubsets[currentSubset].getSize(); j++) { // for each state from the current subset 
 
-			// If the destination state hasn't been added to the new set of states yet 
-			if (!contains<size_t>(newState, allStates[currentStateIndex][k].getSecond())) {
-				newState.pushBack(allStates[currentStateIndex][k].getSecond());
+			// Get the position of the current state in the _allStates array 
+			size_t currentStateIndex = stateSubsets[currentSubset][j];
+
+			for (int k = 0; k < allStates[currentStateIndex].getNumberOfTransitions(); k++) { // For each transition of the current state 
+				// Skip transitions with other letters 
+				if (allStates[currentStateIndex][k].getFirst() != ch) {
+					continue;
+				}
+
+				// If the destination state hasn't been added to the new set of states yet 
+				if (!contains<size_t>(newState, allStates[currentStateIndex][k].getSecond())) {
+					newState.pushBack(allStates[currentStateIndex][k].getSecond());
+				}
 			}
 		}
 	}
-}
 
-void checkStateType(DynamicArray<DynamicArray<size_t>>& stateSubsets, DynamicArray<char>& _alphabet, DynamicArray<State>& allStates,
-	size_t& newStateIndex, DynamicArray<size_t>& _finalStates, DynamicArray<size_t>& finalStates) {
-	// Check if the null set was added - if it was, the respective state in the states array 
-// should have a transition to itself with all letters from the alphabet
-	if (stateSubsets[newStateIndex].getSize() == 0) {
-		for (int h = 0; h < _alphabet.getSize(); h++) {
-			allStates[newStateIndex].addTransition(_alphabet[h], newStateIndex);
+	// A helper function for the determinization algorithm (used in searchAndAdd())
+	void checkStateType(DynamicArray<DynamicArray<size_t>>& stateSubsets, DynamicArray<char>& _alphabet, DynamicArray<State>& allStates,
+		size_t& newStateIndex, DynamicArray<size_t>& _finalStates, DynamicArray<size_t>& finalStates) {
+
+		// Check if the null set was added - if it was, the respective state in the states array 
+		// should have a transition to itself with all letters of the alphabet
+		if (stateSubsets[newStateIndex].getSize() == 0) {
+			for (int h = 0; h < _alphabet.getSize(); h++) {
+				allStates[newStateIndex].addTransition(_alphabet[h], newStateIndex);
+			}
+		}
+
+		else {
+			// Check if the new state contains final states 
+			for (int l = 0; l < _finalStates.getSize(); l++) {
+				// If the added subset contains at least one final state 
+				if (contains<size_t>(stateSubsets[newStateIndex], _finalStates[l])) {
+
+					// Add the new state as a final state 
+					finalStates.pushBack(newStateIndex);
+					break;
+				}
+			}
 		}
 	}
 
-	else {
-		// Check if the new state contains final states 
-		for (int l = 0; l < _finalStates.getSize(); l++) {
-			// If the added subset contains at least one final state 
-			if (contains<size_t>(stateSubsets[newStateIndex], _finalStates[l])) {
+	// A helper function used for the determinization algorithm
+	void searchAndAdd(DynamicArray<DynamicArray<size_t>>& stateSubsets, DynamicArray<size_t>& newState, DynamicArray<State>& allStates,
+		bool& stateAdded, size_t& newStateIndex, DynamicArray<char>& _alphabet, size_t currentSubset, size_t i,
+		DynamicArray<size_t>& finalStates, DynamicArray<size_t>& _finalStates) {
 
-				// Add the newly added state as a final state 
-				finalStates.pushBack(newStateIndex);
+		// Check if the newly created state already exists in the state subsets array 
+		int foundInd = -1;
+		for (int t = 0; t < stateSubsets.getSize(); t++) {
+			if (arraysAreEqual<size_t>(stateSubsets[t], newState)) {
+				foundInd = t;
 				break;
 			}
 		}
-	}
-}
 
-void searchAndAdd(DynamicArray<DynamicArray<size_t>>& stateSubsets, DynamicArray<size_t>& newState, DynamicArray<State>& allStates,
-	bool& stateAdded, size_t& newStateIndex, DynamicArray<char>& _alphabet, size_t currentSubset, size_t i,
-	DynamicArray<size_t>& finalStates, DynamicArray<size_t>& _finalStates) {
+		// If the state hasn't been added yet 
+		if (foundInd < 0) {
+			// Mark that a new state was added
+			stateAdded = true;
 
-	// Check if the newly created state already exists in the state subsets array 
-	int foundInd = -1;
-	for (int t = 0; t < stateSubsets.getSize(); t++) {
-		if (arraysAreEqual<size_t>(stateSubsets[t], newState)) {
-			foundInd = t;
-			break;
+			// Add to subsets array 
+			stateSubsets.pushBack(std::move(newState));
+
+			// Add to the actual array of states 
+			allStates.pushBack(State());
+			allStates[currentSubset].addTransition(_alphabet[i], newStateIndex);
+
+			// Check if the new set contains final states or if it's the null set   
+			checkStateType(stateSubsets, _alphabet, allStates, newStateIndex, _finalStates, finalStates);
+
+			newStateIndex++;
 		}
-	}
 
-	// If the state hasn't been added yet 
-	if (foundInd < 0) {
-		// Mark that a new state was added
-		stateAdded = true;
-		// Add to subsets array 
-		stateSubsets.pushBack(std::move(newState));
-
-		// Add to the actual array of states 
-		allStates.pushBack(State());
-		allStates[currentSubset].addTransition(_alphabet[i], newStateIndex);
-
-		checkStateType(stateSubsets, _alphabet, allStates, newStateIndex, _finalStates, finalStates);
-
-		newStateIndex++;
-	}
-
-	else {
-		allStates[currentSubset].addTransition(_alphabet[i], foundInd);
+		// Add a transition to an already existing state 
+		else {
+			allStates[currentSubset].addTransition(_alphabet[i], foundInd);
+		}
 	}
 }
 
@@ -208,7 +220,10 @@ void NDFA::determinize() {
 	allStates.pushBack(State()); 
 	initialStates.pushBack(0);
 
+	// Array to represent sets of states 
 	DynamicArray<DynamicArray<size_t>> stateSubsets; 
+
+	// A set containing all initial states of the automaton 
 	DynamicArray<size_t> initial; 
 
 	// Initialize the first state in the state subset - a state containing all initial states of the NDFA
@@ -216,6 +231,7 @@ void NDFA::determinize() {
 		initial.pushBack(_initialStates[i]); 
 	}
 
+	// Add it to the array of all sets 
 	stateSubsets.pushBack(std::move(initial)); 
 
 	size_t currentSubset = 0;
@@ -223,7 +239,8 @@ void NDFA::determinize() {
 	size_t newStateIndex = 1; // Index the newly added states, starting from 1
 
 	while (currentSubset < stateSubsets.getSize()) {
-		// If the current set is the null set, don't add any transitions 
+		// If the current set is the null set, don't add any transitions
+		// Transitions from the null set to itself are added from the checkStateType() function 
 		if (stateSubsets[currentSubset].getSize() == 0) {
 			currentSubset++;
 			continue; 
@@ -251,15 +268,16 @@ void NDFA::determinize() {
 	*this = NDFA(std::move(finalStates), std::move(initialStates), std::move(allStates), std::move(_alphabet)); 
 }
 
+// Helper function for the minimization algorithm 
 namespace {
 	// A helper function to find if a pair of states belongs to some existing equivalence class 
 	// This is done because equivalence relations have the property of transitivity
 	int getEquivalenceClassIndex(size_t first, size_t second, const DynamicArray<DynamicArray<size_t>>& newStates) {
 		for (int i = 0; i < newStates.getSize(); i++) { // For all equivalence classes 
-			for (int j = 0; j < newStates[i].getSize(); j++) { // for all states in the equivalence class 
+			for (int j = 0; j < newStates[i].getSize(); j++) { // For all states in the equivalence class 
 
 				// First and second are in the same equivalence class and if either
-				// of them is in another equivalence class, the two equivalence classes can be united 
+				// of them is in another equivalence class (transitivity), the two equivalence classes can be united 
 				if (newStates[i][j] == first || newStates[i][j] == second) {
 					return i; // return the index of the equivalence class 
 				}
@@ -273,13 +291,15 @@ namespace {
 		// This is a flag to generate sets for states that aren't equivalent to any other state
 		bool isSingleton;
 
+		// Table filling method 
 		// I will only look at the elements below the main diagonal
-		for (int i = 0; i < numberOfStates; i++) { // for each row
+		for (int i = 0; i < numberOfStates; i++) { // For each row of the table 
 
 			// States that are not equivalent to any other state are represented by a row of 0's in the table 
 			isSingleton = true;
 
-			for (int j = 0; j < i; j++) { // for each column 
+			for (int j = 0; j < i; j++) { // For each column (below the main diagonal)
+
 				// A pair that is a part of some equivalence class 
 				if (arr[i][j]) {
 					// The current state (i) can't be added by itself, it will be a part of some equivalence class 
@@ -301,6 +321,7 @@ namespace {
 					}
 				}
 			}
+			// The state i isn't equivalent to any other state
 			if (isSingleton) {
 				DynamicArray<size_t> singleton;
 				singleton.pushBack(i);
@@ -309,9 +330,10 @@ namespace {
 		}
 	}
 
+	// Find the index of an equivalence class where a given state belongs (used in generateMinimalAutomaton to add transitions)
 	int findStateEquivalenceClass(const DynamicArray<DynamicArray<size_t>>& equivalenceClasses, size_t stateName) {
-		for (int i = 0; i < equivalenceClasses.getSize(); i++) { // for each class
-			for (int j = 0; j < equivalenceClasses[i].getSize(); j++) { // for each state in the class 
+		for (int i = 0; i < equivalenceClasses.getSize(); i++) { // For each class
+			for (int j = 0; j < equivalenceClasses[i].getSize(); j++) { // For each state in the class 
 				if (equivalenceClasses[i][j] == stateName) {
 					// return the index of the equivalence class 
 					return i;
@@ -330,25 +352,32 @@ NDFA generateMinimalAutomaton(const DynamicArray<DynamicArray<size_t>>& newState
 	DynamicArray<State> allStates;
 	DynamicArray<char> alphabet = originalAutomaton._alphabet;
 
-	for (int i = 0; i < newStates.getSize(); i++) { // for each equivalence class 
-		allStates.pushBack(State()); // Add a new state for the current set of states 
+	// The new automaton will be deterministic, so it will only have one initial state 
+	bool initialStateAdded = false;
 
-		// If one of the states is final in the original automaton, then all other states are final too, so check for the first state
+	for (int i = 0; i < newStates.getSize(); i++) { // for each equivalence class 
+		allStates.pushBack(State()); // Add a new state for the current set of states in the actual automaton  
+
+		// If one of the states in an equivalence class is final, then all other states are final too, so check for the first state
 		if (originalAutomaton.isFinal(newStates[i][0])) {  
 			finalStates.pushBack(i); 
 		}
 
 		// Find the initial state in the current equivalence class 
 		// The equivalence class of the initial state is the initial state of the new automaton 
-		for (int j = 0; j < newStates[i].getSize(); j++) {
+		for (int j = 0; !initialStateAdded && j < newStates[i].getSize(); j++) {
 			// The automaton has a single initial state since it's deterministic
+
 			if (newStates[i][j] == originalAutomaton._initialStates[0]) {
 				initialStates.pushBack(i);
+				initialStateAdded = true;
 			}
 		}
 
-		// Add transitions with all letters 
+		// Add transitions with all letters
 		for (int k = 0; k < alphabet.getSize(); k++) {
+			// Find the index of the destination state 
+			// The transition is from newStates[i][0], because all states from one equivalence class should behave the same 
 			size_t destClass = findStateEquivalenceClass(newStates, originalAutomaton._allStates[newStates[i][0]].getDestinationState(alphabet[k]));
 			allStates[i].addTransition(alphabet[k], destClass);
 		}
@@ -357,6 +386,7 @@ NDFA generateMinimalAutomaton(const DynamicArray<DynamicArray<size_t>>& newState
 }
 
 // Source used: https://store.fmi.uni-sofia.bg/fmi/logic/static/eai/eai.pdf
+// Table-filling method 
 void NDFA::minimize() {
 	removeUnreachableStates();
 	determinize();
