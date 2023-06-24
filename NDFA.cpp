@@ -548,7 +548,10 @@ bool NDFA::accept(const StringView& word, int currentState) const{
 		if (_allStates[currentState][i].getFirst() == word[0]) {
 
 			// Remove the first letter of the word and set the destination state as a current state 
-			return accept(word.substr(1, word.length() - 1), _allStates[currentState][i].getSecond()); 
+			if (accept(word.substr(1, word.length() - 1), _allStates[currentState][i].getSecond())) {
+				// If the path is successful 
+				return true;
+			}
 		}
 	}
 
