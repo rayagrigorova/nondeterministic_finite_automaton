@@ -121,7 +121,12 @@ bool isDeterminisitic(const NDFA& a) {
 // Helper functions for the determinization algorithm 
 namespace {
 	// A helper function 
-	void addToSubset(DynamicArray<DynamicArray<size_t>>& stateSubsets, size_t i, size_t currentSubset, DynamicArray<size_t>& newState, char ch, DynamicArray<State>& allStates) {
+	// Add states to the set of states 
+	void addToSubset(DynamicArray<DynamicArray<size_t>>& stateSubsets, size_t i, size_t currentSubset,
+		DynamicArray<size_t>& newState, char ch, DynamicArray<State>& allStates, size_t& nullStateInd) {
+		// Flag for the case when the current subset should have a transition to the null set 
+		bool noTransitionsWithLetter = true; 
+		
 		for (int j = 0; j < stateSubsets[currentSubset].getSize(); j++) { // for each state from the current subset 
 
 			// Get the position of the current state in the _allStates array 
@@ -133,21 +138,28 @@ namespace {
 					continue;
 				}
 
+				noTransitionsWithLetter = false;
+
 				// If the destination state hasn't been added to the new set of states yet 
 				if (!contains<size_t>(newState, allStates[currentStateIndex][k].getSecond())) {
 					newState.pushBack(allStates[currentStateIndex][k].getSecond());
 				}
 			}
 		}
+
+		if (noTransitionsWithLetter) {
+			allStates[currentSubset].addTransition(ch, nullStateInd); 
+		}
 	}
 
 	// A helper function for the determinization algorithm (used in searchAndAdd())
 	void checkStateType(DynamicArray<DynamicArray<size_t>>& stateSubsets, DynamicArray<char>& _alphabet, DynamicArray<State>& allStates,
-		size_t& newStateIndex, DynamicArray<size_t>& _finalStates, DynamicArray<size_t>& finalStates) {
+		size_t& newStateIndex, DynamicArray<size_t>& _finalStates, DynamicArray<size_t>& finalStates, size_t nullSetInd) {
 
 		// Check if the null set was added - if it was, the respective state in the states array 
 		// should have a transition to itself with all letters of the alphabet
 		if (stateSubsets[newStateIndex].getSize() == 0) {
+			nullSetInd = newStateIndex; 
 			for (int h = 0; h < _alphabet.getSize(); h++) {
 				allStates[newStateIndex].addTransition(_alphabet[h], newStateIndex);
 			}
@@ -169,7 +181,7 @@ namespace {
 	// A helper function used for the determinization algorithm
 	void searchAndAdd(DynamicArray<DynamicArray<size_t>>& stateSubsets, DynamicArray<size_t>& newState, DynamicArray<State>& allStates,
 		bool& stateAdded, size_t& newStateIndex, DynamicArray<char>& _alphabet, size_t currentSubset, size_t i,
-		DynamicArray<size_t>& finalStates, DynamicArray<size_t>& _finalStates) {
+		DynamicArray<size_t>& finalStates, DynamicArray<size_t>& _finalStates, size_t& nullStateInd) {
 
 		// Check if the newly created state already exists in the state subsets array 
 		int foundInd = -1;
@@ -193,7 +205,7 @@ namespace {
 			allStates[currentSubset].addTransition(_alphabet[i], newStateIndex);
 
 			// Check if the new set contains final states or if it's the null set   
-			checkStateType(stateSubsets, _alphabet, allStates, newStateIndex, _finalStates, finalStates);
+			checkStateType(stateSubsets, _alphabet, allStates, newStateIndex, _finalStates, finalStates, nullStateInd);
 
 			newStateIndex++;
 		}
@@ -228,11 +240,13 @@ void NDFA::determinize() {
 	for (int i = 0; i < _initialStates.getSize(); i++) {
 		initial.pushBack(_initialStates[i]); 
 	}
+	
 	// Add it to the array of all sets 
 	stateSubsets.pushBack(std::move(initial)); 
 
 	size_t newStateIndex = 0;
-	checkStateType(stateSubsets, _alphabet, allStates, newStateIndex, _finalStates, finalStates);
+	size_t nullStateInd = 0;
+	checkStateType(stateSubsets, _alphabet, allStates, newStateIndex, _finalStates, finalStates, nullStateInd);
 
 	size_t currentSubset = 0;
 	size_t alphabetSize = _alphabet.getSize();
@@ -253,8 +267,8 @@ void NDFA::determinize() {
 			// A set of states representing the combined result of all delta functions with the current letter
 			DynamicArray<size_t> newState; 
 
-			addToSubset(stateSubsets, i, currentSubset, newState, _alphabet[i], _allStates); 
-			searchAndAdd(stateSubsets, newState, allStates, stateAdded, newStateIndex, _alphabet, currentSubset, i, finalStates, _finalStates);
+			addToSubset(stateSubsets, i, currentSubset, newState, _alphabet[i], _allStates, nullStateInd); 
+			searchAndAdd(stateSubsets, newState, allStates, stateAdded, newStateIndex, _alphabet, currentSubset, i, finalStates, _finalStates, nullStateInd);
 		}
 		
 		// If no new states were added 
