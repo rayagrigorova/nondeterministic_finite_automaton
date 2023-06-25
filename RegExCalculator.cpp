@@ -81,7 +81,6 @@ RegEx* RegExCalculator::parseExpr(const StringView& str) {
 	
 	// Remove the first and the last symbol of the string (brackets)
 	StringView withoutBrackets = str.substr(1, str.length() - 2);
-	std::cout << withoutBrackets << std::endl;
 
 	int count = 0;
 

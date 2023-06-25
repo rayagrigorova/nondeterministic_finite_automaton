@@ -41,6 +41,15 @@ int State::getDestinationState(char ch) const {
 	return -1;
 }
 
+bool State::hasTransition(char ch, size_t destInd) {
+	for (int i = 0; i < _arr.getSize(); i++) {
+		if (_arr[i].getFirst() == ch && _arr[i].getSecond() == destInd) {
+			return true;
+		}
+	}
+	return false;
+}
+
 std::ostream& operator<<(std::ostream& os, const State& s) {
 	return os << s._arr;
 }

@@ -10,7 +10,7 @@ public:
 	void execute(std::istream& is, std::ostream& os) override {
 		_a->minimize();
 
-		os << "Minimized automaton:\n";
+		os << "Minimized automaton:\n\n";
 		_a->print(os);
 		os << std::endl;
 	}

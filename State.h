@@ -30,4 +30,6 @@ public:
 	friend std::ostream& operator<<(std::ostream& os, const State& s);
 	friend std::istream& operator>>(std::istream& is, State& s);
 
+	bool hasTransition(char ch, size_t destInd); 
+
 };

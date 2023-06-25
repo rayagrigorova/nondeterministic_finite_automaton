@@ -391,10 +391,7 @@ NDFA generateMinimalAutomaton(const DynamicArray<DynamicArray<size_t>>& newState
 // Table-filling method 
 void NDFA::minimize() {
 	removeUnreachableStates();
-	determinize();
-
-	std::cout << "DETERMINIZED:\n\n"; 
-	print(std::cout);
+	determinize(); 
 	
 	size_t numberOfStates = _allStates.getSize();
 
@@ -822,7 +819,9 @@ NDFA kleeneStar(const NDFA& a) {
 				size_t finalInd = copyA._finalStates[k];
 
 				// Copy the current transition of the current initial state for the current final state 
-				copyA._allStates[finalInd].addTransition(copyA._allStates[initialInd][j].getFirst(), copyA._allStates[initialInd][j].getSecond());
+				if (!copyA._allStates[finalInd].hasTransition(copyA._allStates[initialInd][j].getFirst(), copyA._allStates[initialInd][j].getSecond())) { // if a transition with a 
+					copyA._allStates[finalInd].addTransition(copyA._allStates[initialInd][j].getFirst(), copyA._allStates[initialInd][j].getSecond());
+				}
 			}
 		}
 	}
