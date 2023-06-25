@@ -53,7 +53,7 @@ public:
 
 	friend NDFA kleeneStar(const NDFA& a);
 
-	MyString getRegEx() const; 
+	MyString getRegEx(); 
 	friend NDFA getAutomatonForRegEx(MyString regEx); 
 
 	void print(std::ostream& os) const; 

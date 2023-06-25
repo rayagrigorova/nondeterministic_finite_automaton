@@ -120,7 +120,6 @@ bool isDeterminisitic(const NDFA& a) {
 
 // Helper functions for the determinization algorithm 
 namespace {
-
 	// A helper function 
 	void addToSubset(DynamicArray<DynamicArray<size_t>>& stateSubsets, size_t i, size_t currentSubset, DynamicArray<size_t>& newState, char ch, DynamicArray<State>& allStates) {
 		for (int j = 0; j < stateSubsets[currentSubset].getSize(); j++) { // for each state from the current subset 
@@ -167,7 +166,6 @@ namespace {
 			}
 		}
 	}
-
 	// A helper function used for the determinization algorithm
 	void searchAndAdd(DynamicArray<DynamicArray<size_t>>& stateSubsets, DynamicArray<size_t>& newState, DynamicArray<State>& allStates,
 		bool& stateAdded, size_t& newStateIndex, DynamicArray<char>& _alphabet, size_t currentSubset, size_t i,
@@ -230,13 +228,15 @@ void NDFA::determinize() {
 	for (int i = 0; i < _initialStates.getSize(); i++) {
 		initial.pushBack(_initialStates[i]); 
 	}
-
 	// Add it to the array of all sets 
 	stateSubsets.pushBack(std::move(initial)); 
 
+	size_t newStateIndex = 0;
+	checkStateType(stateSubsets, _alphabet, allStates, newStateIndex, _finalStates, finalStates);
+
 	size_t currentSubset = 0;
 	size_t alphabetSize = _alphabet.getSize();
-	size_t newStateIndex = 1; // Index the newly added states, starting from 1
+	newStateIndex++; // Index the newly added states, starting from 1 because of the first added subset 
 
 	while (currentSubset < stateSubsets.getSize()) {
 		// If the current set is the null set, don't add any transitions
@@ -392,6 +392,9 @@ NDFA generateMinimalAutomaton(const DynamicArray<DynamicArray<size_t>>& newState
 void NDFA::minimize() {
 	removeUnreachableStates();
 	determinize();
+
+	std::cout << "DETERMINIZED:\n\n"; 
+	print(std::cout);
 	
 	size_t numberOfStates = _allStates.getSize();
 
@@ -572,9 +575,9 @@ bool NDFA::isEmptyLanguage() const {
 
 // Source used: https://www.fit.vut.cz/research/project-file/589/Presentations/PB05-Converting-FAs-To-REs.pdf
 // Method: transitive closure 
-MyString NDFA::getRegEx() const {
+MyString NDFA::getRegEx(){
 	if (!isDeterminisitic(*this)) {
-		throw std::invalid_argument("For the transitive closure method to work, the automaton should be a DFA\n"); 
+		determinize();
 	}
 
 	size_t Q = _allStates.getSize(); 
@@ -842,7 +845,7 @@ NDFA getAutomatonForRegEx(MyString regEx){
 bool NDFA::isReachable(size_t stateInd) const{
 	for (int i = 0; i < _initialStates.getSize(); i++) {
 		// If the state is initial or reachable from the current initial state
-		if (_initialStates[i] == stateInd || isReachable(_initialStates[i], stateInd)) {
+		if (isInitial(stateInd) || isReachable(_initialStates[i], stateInd)) {
 			return true;
 		}
 	}
@@ -856,14 +859,12 @@ bool NDFA::isReachable(size_t fromInd, size_t destInd) const{
 	// Make a list of all states reachable from the fromState 
 	// Using a bool array isn't optimal in terms of memory because a bool only uses 1 bit out of 8 
 	// However, for the sake of simplicity, I am going to use a bool array 
-	size_t reachableCount = 1;
 	size_t arrSize = _allStates.getSize();
 	bool* reachable = new bool[arrSize] { false };
 
 	// The fromState is reachable from itself in 0 steps 
 	reachable[fromInd] = 1; 
 
-	// This loop will repeat n times 
 	while(1){
 		// This flag is used to indicate whether a new state was added to the reachable list 
 		bool flag = 0; 
@@ -874,7 +875,7 @@ bool NDFA::isReachable(size_t fromInd, size_t destInd) const{
 			if (!reachable[i]) {
 				continue;
 			}
-			// For each states that is reachable, add the destination states from all one step transitions as reachable. A destination state is qj in (qi, x) = qj 
+			// For each state that is reachable, add the destination states from all one step transitions as reachable. A destination state is qj in (qi, x) = qj 
 			for (int j = 0; j < _allStates[i].getNumberOfTransitions(); j++) {
 
 				// If we are about to add a state that wasn't in the array initially 
@@ -973,6 +974,7 @@ void NDFA::removeUnreachableStates() {
 				}
 				
 			}
+			i--;
 		}
 	}
 }
