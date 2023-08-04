@@ -1,9 +1,8 @@
 ﻿#include <iostream>
-#include "SymbolConstants.h"
 
-#include "NDFA.h"
-
-#include "Program.h"
+#include "../Constants/SymbolConstants.h"
+#include "../NDFA/NDFA.h"
+#include "../Program/Program.h"
 
 int main() {
     //    Example regular expressions: 
